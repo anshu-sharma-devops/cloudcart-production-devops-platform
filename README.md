@@ -24,6 +24,13 @@ The project begins with a lightweight Nginx placeholder workload. It will gradua
 The main focus of this project is Cloud and DevOps engineering rather than frontend or backend development.
 
 ---
+## 🚦 Project Status
+
+- **Current phase:** Phase 1 completed
+- **Current environment:** Local Docker
+- **Application status:** Running and healthy
+- **Next phase:** Terraform AWS networking
+
 
 ## 🎯 Project Objectives
 

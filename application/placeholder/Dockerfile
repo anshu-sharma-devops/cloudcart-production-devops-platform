@@ -1,4 +1,4 @@
-FROM nginx:1.28-alpine
+FROM nginx:1.28.3-alpine
 
 LABEL maintainer="Anshu Sharma"
 LABEL project="CloudCart Production DevOps Platform"
