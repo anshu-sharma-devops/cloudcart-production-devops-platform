@@ -1,0 +1,23 @@
+services:
+  cloudcart-placeholder:
+    build:
+      context: ./application/placeholder
+      dockerfile: Dockerfile
+    image: cloudcart-placeholder:v1
+    container_name: cloudcart-placeholder
+    ports:
+      - "8081:80"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    networks:
+      - cloudcart-network
+
+networks:
+  cloudcart-network:
+    name: cloudcart-network
+    driver: bridge
