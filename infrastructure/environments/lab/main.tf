@@ -35,4 +35,15 @@ module "ec2" {
     CostCenter = "Learning"
   }
 }
+module "ecr" {
+  source = "../../modules/ecr"
 
+  project_name          = var.project_name
+  environment           = var.environment
+  image_retention_count = 10
+
+  common_tags = {
+    Repository = "cloudcart-production-devops-platform"
+    CostCenter = "Learning"
+  }
+}

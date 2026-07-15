@@ -76,3 +76,17 @@ output "app_url" {
   description = "CloudCart application URL"
   value       = "http://${module.ec2.public_ip}"
 }
+output "ecr_repository_name" {
+  description = "Name of the CloudCart ECR repository"
+  value       = module.ecr.repository_name
+}
+
+output "ecr_repository_url" {
+  description = "URL of the CloudCart ECR repository"
+  value       = module.ecr.repository_url
+}
+
+output "ecr_repository_arn" {
+  description = "ARN of the CloudCart ECR repository"
+  value       = module.ecr.repository_arn
+}
