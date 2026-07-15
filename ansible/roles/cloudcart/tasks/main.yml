@@ -1,0 +1,75 @@
+---
+- name: Create the CloudCart application directory
+  ansible.builtin.file:
+    path: /opt/cloudcart/application
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: "0755"
+
+- name: Copy the CloudCart Dockerfile
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../../application/placeholder/Dockerfile"
+    dest: /opt/cloudcart/application/Dockerfile
+    owner: ubuntu
+    group: ubuntu
+    mode: "0644"
+
+- name: Copy the CloudCart Nginx configuration
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../../application/placeholder/nginx.conf"
+    dest: /opt/cloudcart/application/nginx.conf
+    owner: ubuntu
+    group: ubuntu
+    mode: "0644"
+
+- name: Copy the CloudCart placeholder page
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../../application/placeholder/index.html"
+    dest: /opt/cloudcart/application/index.html
+    owner: ubuntu
+    group: ubuntu
+    mode: "0644"
+
+- name: Create the CloudCart Docker Compose file
+  ansible.builtin.template:
+    src: compose.yaml.j2
+    dest: /opt/cloudcart/compose.yaml
+    owner: ubuntu
+    group: ubuntu
+    mode: "0644"
+
+- name: Validate the Nginx configuration in a temporary container
+  ansible.builtin.command:
+    cmd: >-
+      docker run --rm
+      -v /opt/cloudcart/application/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      nginx:1.28.3-alpine nginx -t
+  register: nginx_validation
+  changed_when: false
+
+- name: Build and deploy CloudCart
+  ansible.builtin.command:
+    cmd: docker compose -f /opt/cloudcart/compose.yaml up -d --build
+  register: compose_deployment
+  changed_when: >-
+    'Started' in compose_deployment.stderr or
+    'Created' in compose_deployment.stderr or
+    'Building' in compose_deployment.stderr
+
+- name: Wait for CloudCart health endpoint
+  ansible.builtin.uri:
+    url: http://127.0.0.1/health
+    status_code: 200
+    return_content: true
+  register: health_response
+  retries: 10
+  delay: 3
+  until: health_response.status == 200
+
+- name: Display CloudCart deployment result
+  ansible.builtin.debug:
+    msg:
+      - "CloudCart deployment completed"
+      - "Health response: {{ health_response.content | trim }}"
+      - "Application version: {{ cloudcart_version }}"

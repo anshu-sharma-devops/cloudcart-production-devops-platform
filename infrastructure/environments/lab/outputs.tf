@@ -42,3 +42,37 @@ output "database_route_table_id" {
   description = "ID of the database route table"
   value       = module.vpc.database_route_table_id
 }
+output "app_instance_id" {
+  description = "ID of the CloudCart lab application server"
+  value       = module.ec2.instance_id
+}
+
+output "app_public_ip" {
+  description = "Public IP address of the application server"
+  value       = module.ec2.public_ip
+}
+
+output "app_private_ip" {
+  description = "Private IP address of the application server"
+  value       = module.ec2.private_ip
+}
+
+output "app_security_group_id" {
+  description = "ID of the application security group"
+  value       = module.ec2.security_group_id
+}
+
+output "app_ami_id" {
+  description = "Ubuntu AMI used by the application server"
+  value       = module.ec2.ami_id
+}
+
+output "app_ssh_command" {
+  description = "SSH command for connecting to the application server"
+  value       = "ssh -i ~/.ssh/jenkins-key.pem ubuntu@${module.ec2.public_ip}"
+}
+
+output "app_url" {
+  description = "CloudCart application URL"
+  value       = "http://${module.ec2.public_ip}"
+}

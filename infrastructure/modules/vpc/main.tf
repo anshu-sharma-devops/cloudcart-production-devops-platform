@@ -10,6 +10,7 @@ locals {
   tags = merge(var.common_tags, local.required_tags)
 }
 
+
 resource "aws_vpc" "this" {
   cidr_block           = var.vpc_cidr
   enable_dns_support   = true
@@ -116,10 +117,8 @@ resource "aws_route_table" "database" {
     Tier = "Database"
   })
 }
-
 resource "aws_route_table_association" "database" {
-  count = length(aws_subnet.database)
-
+  count          = length(aws_subnet.database)
   subnet_id      = aws_subnet.database[count.index].id
   route_table_id = aws_route_table.database.id
 }

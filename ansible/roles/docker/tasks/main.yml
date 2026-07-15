@@ -1,0 +1,38 @@
+---
+- name: Update the apt package cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install Docker and supporting packages
+  ansible.builtin.apt:
+    name:
+      - docker.io
+      - docker-compose-v2
+      - git
+      - curl
+      - ca-certificates
+    state: present
+
+- name: Ensure Docker is enabled and running
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Add Ubuntu user to Docker group
+  ansible.builtin.user:
+    name: ubuntu
+    groups: docker
+    append: true
+
+- name: Verify Docker service status
+  ansible.builtin.command:
+    cmd: systemctl is-active docker
+  register: docker_service_status
+  changed_when: false
+  failed_when: docker_service_status.stdout != "active"
+
+- name: Display Docker service status
+  ansible.builtin.debug:
+    msg: "Docker service is {{ docker_service_status.stdout }}"

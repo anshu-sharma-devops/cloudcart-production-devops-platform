@@ -1,0 +1,12 @@
+---
+- name: Configure and deploy the CloudCart lab application
+  hosts: cloudcart_lab
+  become: true
+  gather_facts: true
+
+  vars:
+    cloudcart_version: "1.0.0"
+
+  roles:
+    - docker
+    - cloudcart
