@@ -1,0 +1,207 @@
+pipeline {
+    agent any
+
+    parameters {
+        string(
+            name: 'APP_HOST',
+            defaultValue: '52.66.200.233',
+            description: 'Public IP address of the CloudCart EC2 server'
+        )
+    }
+
+    environment {
+        PATH           = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:${env.PATH}"
+        AWS_REGION     = "ap-south-1"
+        ECR_REGISTRY   = "354354997875.dkr.ecr.ap-south-1.amazonaws.com"
+        ECR_REPOSITORY = "cloudcart-lab"
+        TEST_CONTAINER = "cloudcart-ci-test-${BUILD_NUMBER}"
+        IMAGE_TAG      = "v1.0.${BUILD_NUMBER}"
+        IMAGE_URI      = "${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+    }
+
+    options {
+        skipDefaultCheckout(true)
+        disableConcurrentBuilds()
+        timestamps()
+        timeout(time: 30, unit: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+
+                sh '''
+                    echo "Repository checked out successfully"
+                    git rev-parse --short HEAD
+                '''
+            }
+        }
+
+        stage('Validate Configuration') {
+            steps {
+                sh '''
+                    echo "Validating Nginx configuration"
+
+                    docker run --rm \
+                      -v "$WORKSPACE/application/placeholder/nginx.conf:/etc/nginx/conf.d/default.conf:ro" \
+                      nginx:1.28.3-alpine \
+                      nginx -t
+                '''
+            }
+        }
+
+        stage('Build Image') {
+            steps {
+                sh '''
+                    echo "Building image: $IMAGE_URI"
+
+                    docker build \
+                      --platform linux/amd64 \
+                      --label "org.opencontainers.image.revision=$GIT_COMMIT" \
+                      --label "org.opencontainers.image.version=$IMAGE_TAG" \
+                      --label "org.opencontainers.image.source=$GIT_URL" \
+                      -t "$IMAGE_URI" \
+                      application/placeholder
+                '''
+            }
+        }
+
+        stage('Test Container') {
+            steps {
+                sh '''
+                    docker rm -f "$TEST_CONTAINER" 2>/dev/null || true
+
+                    docker run -d \
+                      --name "$TEST_CONTAINER" \
+                      "$IMAGE_URI"
+
+                    sleep 5
+
+                    docker exec "$TEST_CONTAINER" \
+                      wget --quiet --tries=1 --spider \
+                      http://127.0.0.1/health
+
+                    echo "Container health test passed"
+                '''
+            }
+        }
+
+        stage('Security Scan') {
+            steps {
+                sh '''
+                    echo "Scanning image for critical vulnerabilities"
+
+                    trivy image \
+                      --exit-code 1 \
+                      --severity CRITICAL \
+                      --ignore-unfixed \
+                      "$IMAGE_URI"
+                '''
+            }
+        }
+
+        stage('Push to ECR') {
+            steps {
+                withCredentials([
+                    [$class: 'AmazonWebServicesCredentialsBinding',
+                     credentialsId: 'cloudcart-aws-credentials']
+                ]) {
+                    sh '''
+                        aws sts get-caller-identity
+
+                        aws ecr get-login-password \
+                          --region "$AWS_REGION" |
+                        docker login \
+                          --username AWS \
+                          --password-stdin "$ECR_REGISTRY"
+
+                        docker push "$IMAGE_URI"
+
+                        echo "Image pushed successfully: $IMAGE_URI"
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy to EC2') {
+            steps {
+                withCredentials([
+                    sshUserPrivateKey(
+                        credentialsId: 'cloudcart-ec2-ssh',
+                        keyFileVariable: 'SSH_KEY',
+                        usernameVariable: 'SSH_USER'
+                    )
+                ]) {
+                    sh '''
+                        ssh \
+                          -o StrictHostKeyChecking=no \
+                          -o ConnectTimeout=20 \
+                          -i "$SSH_KEY" \
+                          "$SSH_USER@$APP_HOST" \
+                          "set -e
+                           aws ecr get-login-password --region '$AWS_REGION' |
+                             docker login --username AWS --password-stdin '$ECR_REGISTRY'
+                           docker pull '$IMAGE_URI'
+                           docker rm -f cloudcart-placeholder 2>/dev/null || true
+                           docker run -d \
+                             --name cloudcart-placeholder \
+                             --restart unless-stopped \
+                             -p 80:80 \
+                             '$IMAGE_URI'"
+                    '''
+                }
+            }
+        }
+
+        stage('Verify Deployment') {
+            steps {
+                sh '''
+                    echo "Waiting for CloudCart deployment"
+
+                    for attempt in $(seq 1 12); do
+                        if curl \
+                          --fail \
+                          --silent \
+                          --show-error \
+                          "http://$APP_HOST/health" |
+                          grep -q "healthy"; then
+
+                            echo "CloudCart deployment is healthy"
+                            exit 0
+                        fi
+
+                        echo "Health check attempt $attempt failed; retrying"
+                        sleep 5
+                    done
+
+                    echo "CloudCart deployment failed health verification"
+                    exit 1
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            sh '''
+                docker rm -f "$TEST_CONTAINER" 2>/dev/null || true
+                docker logout "$ECR_REGISTRY" 2>/dev/null || true
+            '''
+        }
+
+        success {
+            echo "CloudCart ${IMAGE_TAG} deployed successfully"
+            echo "Application URL: http://${params.APP_HOST}"
+        }
+
+        failure {
+            echo "CloudCart pipeline failed. Review the failed stage and console output."
+        }
+
+        cleanup {
+            cleanWs()
+        }
+    }
+}
