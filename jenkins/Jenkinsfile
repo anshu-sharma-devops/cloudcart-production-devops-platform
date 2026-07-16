@@ -59,9 +59,9 @@ pipeline {
 
                     docker build \
                       --platform linux/amd64 \
-                      --label "org.opencontainers.image.revision=$GIT_COMMIT" \
-                      --label "org.opencontainers.image.version=$IMAGE_TAG" \
-                      --label "org.opencontainers.image.source=$GIT_URL" \
+                     --label "org.opencontainers.image.revision=$(git rev-parse HEAD)" \
+--label "org.opencontainers.image.version=$IMAGE_TAG" \
+--label "org.opencontainers.image.source=$(git config --get remote.origin.url)" \
                       -t "$IMAGE_URI" \
                       application/placeholder
                 '''
@@ -72,11 +72,10 @@ pipeline {
             steps {
                 sh '''
                     docker rm -f "$TEST_CONTAINER" 2>/dev/null || true
-
-                    docker run -d \
-                      --name "$TEST_CONTAINER" \
-                      "$IMAGE_URI"
-
+                         docker run -d \
+                         --platform linux/amd64 \
+                          --name "$TEST_CONTAINER" \
+                                "$IMAGE_URI"
                     sleep 5
 
                     docker exec "$TEST_CONTAINER" \
@@ -97,6 +96,7 @@ pipeline {
                       --exit-code 1 \
                       --severity CRITICAL \
                       --ignore-unfixed \
+                      --scanners vuln \
                       "$IMAGE_URI"
                 '''
             }
