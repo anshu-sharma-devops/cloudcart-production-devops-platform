@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloudcart
+  namespace: cloudcart
+  labels:
+    app.kubernetes.io/name: cloudcart
+    app.kubernetes.io/component: frontend
+spec:
+  replicas: 2
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cloudcart
+
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cloudcart
+        app.kubernetes.io/component: frontend
+    spec:
+      terminationGracePeriodSeconds: 30
+
+      containers:
+        - name: cloudcart
+          image: cloudcart-placeholder:k8s-v1
+          imagePullPolicy: IfNotPresent
