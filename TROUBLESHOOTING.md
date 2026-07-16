@@ -24,7 +24,7 @@ This document records errors encountered while building the CloudCart production
 
 ---
 
-# Phase 1 â€” Docker, Docker Compose and Nginx
+# Phase 1 — Docker, Docker Compose and Nginx
 
 ## 1. Docker daemon was not running
 
@@ -37,7 +37,7 @@ dial unix .../.docker/run/docker.sock: connect: no such file or directory
 
 ### Root cause
 
-The Docker CLI was installed, but Docker Desktopâ€”and therefore the Docker daemonâ€”was not running.
+The Docker CLI was installed, but Docker Desktop—and therefore the Docker daemon—was not running.
 
 ### Resolution
 
@@ -210,7 +210,7 @@ curl -i http://localhost:8081/health
 
 ---
 
-# Phase 2 â€” Terraform and AWS Networking
+# Phase 2 — Terraform and AWS Networking
 
 ## 6. Terraform module directory did not exist
 
@@ -370,7 +370,7 @@ An interactive confirmation value was entered where Terraform expected an IPv4 C
 
 ### Resolution
 
-Get the administratorâ€™s current public IP:
+Get the administrator’s current public IP:
 
 ```bash
 curl -s https://checkip.amazonaws.com
@@ -390,7 +390,7 @@ Use input validation and least-privilege CIDRs. Never use `0.0.0.0/0` for SSH in
 
 ---
 
-# Phase 3 â€” Terraform EC2 and SSH
+# Phase 3 — Terraform EC2 and SSH
 
 ## 11. EC2 variables and module call were placed inside the VPC module
 
@@ -554,7 +554,7 @@ Do not hard-code temporary public addresses. A production environment would norm
 
 ---
 
-# Phase 4 â€” Ansible and Server Configuration
+# Phase 4 — Ansible and Server Configuration
 
 ## 16. Ansible could not reach the EC2 host
 
@@ -686,13 +686,13 @@ Non-interactive automation may have a different PATH from an interactive SSH she
 
 ---
 
-# Phase 5 â€” Amazon ECR and IAM
+# Phase 5 — Amazon ECR and IAM
 
 ## 20. EC2 needed ECR access without stored AWS keys
 
 ### Problem
 
-The EC2 host needed permission to inspect and pull private ECR images, but storing an IAM userâ€™s long-lived access keys on the host would be insecure.
+The EC2 host needed permission to inspect and pull private ECR images, but storing an IAM user’s long-lived access keys on the host would be insecure.
 
 ### Resolution
 
@@ -758,7 +758,7 @@ Tag immutability was enabled intentionally.
 Publish a new version tag instead of overwriting an existing release:
 
 ```text
-v1.0.1 â†’ v1.0.2 â†’ v1.0.3
+v1.0.1 → v1.0.2 → v1.0.3
 ```
 
 ### Lesson
@@ -767,7 +767,7 @@ Immutable artifacts improve traceability. A new build should create a new versio
 
 ---
 
-# Phase 6 â€” Jenkins CI/CD
+# Phase 6 — Jenkins CI/CD
 
 ## 23. Jenkins pipeline could not access Docker
 
@@ -886,7 +886,7 @@ Do not repeat commits or force-push automatically after a remote error. First de
 
 ---
 
-# Phase 7 â€” Kind and Kubernetes
+# Phase 7 — Kind and Kubernetes
 
 ## 27. `kubectl` pointed to a deleted EKS cluster
 
@@ -1072,7 +1072,7 @@ kubectl get pods -n cloudcart -o wide
 
 ### Lesson
 
-Least privilege means granting the minimum capabilities requiredâ€”not assuming that removing every capability will preserve application functionality.
+Least privilege means granting the minimum capabilities required—not assuming that removing every capability will preserve application functionality.
 
 ---
 
@@ -1188,7 +1188,7 @@ kubectl get endpointslice -n cloudcart \
 
 ### Root cause
 
-The Serviceâ€™s named `targetPort` did not resolve to a matching named container port.
+The Service’s named `targetPort` did not resolve to a matching named container port.
 
 ### Resolution
 
@@ -1369,7 +1369,7 @@ Use this template for future phases:
 
 ### Phase and component
 
-Phase X â€” Tool or service
+Phase X — Tool or service
 
 ### Symptom
 
@@ -1408,6 +1408,6 @@ The engineering principle learned from the incident.
 
 ## Current Coverage
 
-This guide covers completed work through **Phase 7 â€” Kubernetes Foundation**.
+This guide covers completed work through **Phase 7 — Kubernetes Foundation**.
 
 Future issues from Helm, Argo CD, monitoring, security automation, reliability testing, EKS, and application integration will be added only after those phases are implemented and verified.
