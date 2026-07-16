@@ -1,0 +1,153 @@
+.
+├── README.md
+├── TROUBLESHOOTING.md
+├── ansible
+│   ├── ansible.cfg
+│   ├── inventory
+│   │   └── hosts.ini
+│   ├── playbooks
+│   │   └── deploy-cloudcart.yml
+│   └── roles
+│       ├── cloudcart
+│       │   ├── tasks
+│       │   └── templates
+│       └── docker
+│           └── tasks
+├── application
+│   └── placeholder
+│       ├── Dockerfile
+│       ├── index.html
+│       └── nginx.conf
+├── architecture
+├── argocd
+├── compose.yaml
+├── docker
+├── helm
+├── infrastructure
+│   ├── environments
+│   │   ├── dev
+│   │   ├── lab
+│   │   │   ├── cloudcart-lab.tfplan
+│   │   │   ├── cloudcart-phase3-ec2.tfplan
+│   │   │   ├── cloudcart-phase3.tfplan
+│   │   │   ├── cloudcart-phase5-ecr.tfplan
+│   │   │   ├── main.tf
+│   │   │   ├── outputs.tf
+│   │   │   ├── provider.tf
+│   │   │   ├── terraform.tfstate
+│   │   │   ├── terraform.tfstate.backup
+│   │   │   ├── terraform.tfvars
+│   │   │   ├── terraform.tfvars.example
+│   │   │   ├── variables.tf
+│   │   │   └── versions.tf
+│   │   ├── production
+│   │   └── staging
+│   └── modules
+│       ├── ec2
+│       │   ├── main.tf
+│       │   ├── outputs.tf
+│       │   └── variables.tf
+│       ├── ecr
+│       │   ├── main.tf
+│       │   ├── outputs.tf
+│       │   └── variables.tf
+│       └── vpc
+│           ├── main.tf
+│           ├── outputs.tf
+│           └── variables.tf
+├── jenkins
+│   └── Jenkinsfile
+├── kubernetes
+│   ├── base
+│   │   ├── deployment.yaml
+│   │   ├── kustomization.yaml
+│   │   ├── namespace.yaml
+│   │   ├── pdb.yaml
+│   │   └── service.yaml
+│   ├── kind
+│   │   └── cluster-config.yaml
+│   └── overlays
+│       ├── dev
+│       ├── production
+│       └── staging
+├── monitoring
+│   ├── grafana
+│   └── prometheus
+├── project-tree.txt
+├── runbooks
+├── screenshots
+│   ├── 01-cloudcart-placeholder-local.png
+│   ├── 02-docker-compose-service-healthy.png
+│   ├── 03-cloudcart-health-endpoint.png
+│   ├── phase-2
+│   │   ├── 01-terraform-init-success.png
+│   │   ├── 02-terraform-validate-success.png
+│   │   ├── 03-terraform-plan-no-changes.png
+│   │   ├── 04-terraform-managed-resources.png
+│   │   ├── 05-terraform-outputs.png
+│   │   ├── 06-aws-vpc-created.png
+│   │   ├── 07-public-subnets.png
+│   │   ├── 08-private-app-subnets.png
+│   │   ├── 09-database-subnets.png
+│   │   ├── 10-internet-gateway.png
+│   │   ├── 11-route-tables.png
+│   │   └── 12-public-internet-route.png
+│   ├── phase-3
+│   │   ├── 01-terraform-phase3-plan.png
+│   │   ├── 02-terraform-phase3-managed-resources.png
+│   │   ├── 03-terraform-phase3-outputs.png
+│   │   ├── 04-cloudcart-ec2-running.png
+│   │   ├── 05-cloudcart-security-group.png
+│   │   ├── 06-encrypted-ebs-volume.png
+│   │   ├── 07-cloudcart-iam-role.png
+│   │   └── 08-cloudcart-ssh-success.png
+│   ├── phase-4
+│   │   ├── 01-ansible-ping-success.png
+│   │   ├── 02-ansible-playbook-success.png
+│   │   ├── 03-docker-service-active.png
+│   │   ├── 04-cloudcart-container-healthy.png
+│   │   ├── 05-cloudcart-public-health.png
+│   │   └── 06-cloudcart-aws-website.png
+│   ├── phase-5
+│   │   ├── 01-terraform-ecr-plan.png
+│   │   ├── 02-terraform-ecr-managed-resources.png
+│   │   ├── 03-ecr-login-success.png
+│   │   ├── 04-docker-image-build.png
+│   │   ├── 05-ecr-image-push.png
+│   │   ├── 06-ecr-image-in-aws-console.png
+│   │   ├── 07-ecr-repository-settings.png
+│   │   └── 08-ecr-lifecycle-policy.png
+│   ├── phase-6
+│   │   ├── 01-jenkins-prerequisite-check.png
+│   │   ├── 02-aws-cli-installed-on-ec2.png
+│   │   ├── 03-ec2-iam-role-identity.png
+│   │   ├── 04-ec2-ecr-access.png
+│   │   ├── 05-jenkins-credential-ids.png
+│   │   ├── 06-pipeline-failed-docker-not-running.png
+│   │   ├── 07-trivy-critical-vulnerabilities-detected.png
+│   │   ├── 08-trivy-security-scan-passed.png
+│   │   ├── 09-jenkins-pipeline-stage-view.png
+│   │   ├── 10-ecr-image-push-success.png
+│   │   ├── 11-ec2-deployment-success.png
+│   │   ├── 12-jenkins-console-success.png
+│   │   ├── 13-ecr-v1.0.4-image.png
+│   │   ├── 14-cloudcart-after-cicd-deployment.png
+│   │   ├── 15-public-health-verification.png
+│   │   └── 16-jenkins-credentials-masked.png
+│   └── phase-7
+│       ├── 01-kind-cluster-created.png
+│       ├── 02-kind-three-nodes-ready.png
+│       ├── 03-cloudcart-image-loaded-all-nodes.png
+│       ├── 04-kubernetes-rollout-success.png
+│       ├── 05-cloudcart-pods-distributed.png
+│       ├── 06-kubernetes-resources.png
+│       ├── 07-cloudcart-endpointslice.png
+│       ├── 08-cloudcart-health-endpoint.png
+│       ├── 09-cloudcart-kubernetes-browser.png
+│       ├── 10-before-self-healing-test.png
+│       ├── 11-kubernetes-self-healing.png
+│       ├── 12-self-healing-completed.png .png
+│       └── 13-health-after-self-healing.png
+└── security
+
+46 directories, 105 files
