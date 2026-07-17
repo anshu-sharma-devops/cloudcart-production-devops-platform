@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: cloudcart
+  namespace: argocd
+spec:
+  description: GitOps project for the CloudCart platform
+
+  sourceRepos:
+    - https://github.com/anshu-sharma-devops/cloudcart-production-devops-platform.git
+
+  destinations:
+    - namespace: cloudcart-gitops
+      server: https://kubernetes.default.svc
+
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+
+  namespaceResourceWhitelist:
+    - group: apps
+      kind: Deployment
+    - group: ""
+      kind: Service
+    - group: policy
+      kind: PodDisruptionBudget

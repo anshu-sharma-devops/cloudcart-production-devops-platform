@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloudcart-gitops
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io/foreground
+spec:
+  project: cloudcart
+
+  source:
+    repoURL: https://github.com/anshu-sharma-devops/cloudcart-production-devops-platform.git
+    targetRevision: main
+    path: helm/cloudcart
+    helm:
+      releaseName: cloudcart
+      valueFiles:
+        - values-gitops.yaml
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cloudcart-gitops
+
+  syncPolicy:
+    automated:
+      enabled: true
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true
+
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 1m
