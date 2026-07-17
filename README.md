@@ -4,7 +4,7 @@
 
 ### Turning a placeholder container into a cost-controlled, automated, self-healing delivery platform
 
-**One-line value:** CloudCart proves, end to end, that I can take an application from source code to a monitored, self-healing, security-gated deployment — using the same tools and patterns real engineering teams use.
+**One-line value:** CloudCart proves, end to end, that I can take an application from source code to a health-verified, self-healing, security-gated deployment — using the same tools and patterns real engineering teams use.
 
 [![AWS](https://img.shields.io/badge/AWS-ap--south--1-FF9900?logo=amazonwebservices&logoColor=white)](https://aws.amazon.com/)
 [![Terraform](https://img.shields.io/badge/Terraform-Infrastructure_as_Code-844FBA?logo=terraform&logoColor=white)](https://developer.hashicorp.com/terraform)
@@ -16,9 +16,9 @@
 [![Trivy](https://img.shields.io/badge/Trivy-Security_Scanning-1904DA?logo=aquasecurity&logoColor=white)](https://trivy.dev/)
 
 [![Status](https://img.shields.io/badge/Status-Active_Development-F59E0B)](#current-status)
-[![Completed](https://img.shields.io/badge/Completed-Phases_1--7-22C55E)](#implementation-roadmap)
-[![Next](https://img.shields.io/badge/Next-Phase_8_Helm-0F1689)](#phase-8--helm-packaging-detailed-plan)
-[![License](https://img.shields.io/badge/Cost-Free_Tier_Conscious-16A34A)](#cost-control-decisions)
+[![Completed](https://img.shields.io/badge/Completed-Phases_1--8-22C55E)](#implementation-roadmap)
+[![Next](https://img.shields.io/badge/Next-Phase_9_Argo_CD-EF7B4D)](#phase-9--argo-cd-gitops-next)
+[![Cost](https://img.shields.io/badge/Cost-Free_Tier_Conscious-16A34A)](#cost-control-decisions)
 [![Quality Checks](https://github.com/anshu-sharma-devops/cloudcart-production-devops-platform/actions/workflows/quality-checks.yml/badge.svg?branch=main)](https://github.com/anshu-sharma-devops/cloudcart-production-devops-platform/actions/workflows/quality-checks.yml)
 [![Container Build](https://github.com/anshu-sharma-devops/cloudcart-production-devops-platform/actions/workflows/container-build.yml/badge.svg?branch=main)](https://github.com/anshu-sharma-devops/cloudcart-production-devops-platform/actions/workflows/container-build.yml)
 
@@ -33,10 +33,10 @@
 | Category | Current state |
 |---|---|
 | Project type | Production-style DevOps portfolio platform |
-| Completed milestone | Phase 7 — Kubernetes foundation |
-| Next milestone | Phase 8 — Helm packaging |
+| Completed milestone | Phase 8 — Helm packaging and rollback |
+| Next milestone | Phase 9 — Argo CD GitOps |
 | AWS environment | Cost-controlled EC2 + ECR lab (`ap-south-1`) |
-| Kubernetes environment | Local three-node **Kind** cluster (not EKS) |
+| Kubernetes environment | Helm-managed release on a local three-node **Kind** cluster (not EKS) |
 | CI/CD | Jenkins pipeline — checkout → build → scan → deploy, completed |
 | Application workload | Nginx placeholder |
 | Current replicas | Two, spread across two worker nodes |
@@ -53,7 +53,7 @@ CloudCart simulates a growing e-commerce company that needs to ship changes safe
 
 Today, that platform provisions AWS networking and compute with Terraform, configures servers with Ansible, builds and scans container images, stores them in a private registry, deploys them through a Jenkins pipeline, and runs the workload on Kubernetes with health checks, resource limits and automatic recovery. The current application is intentionally a lightweight Nginx placeholder so the platform itself can be demonstrated cleanly before a real frontend, API and database are layered on top in Phase 14.
 
-Seven phases are complete and verified. Phase 8, packaging the Kubernetes manifests as a Helm chart, is next.
+Eight phases are complete and verified. Phase 9, implementing GitOps reconciliation with Argo CD, is next.
 
 ---
 
@@ -95,7 +95,7 @@ Most portfolio projects show *an app*. CloudCart shows *the machinery that ships
 
 | Achievement | Why it matters |
 |---|---|
-| Multi-AZ, multi-tier VPC via reusable Terraform modules | Mirrors how real teams separate public, application and database layers and design for AZ failure |
+| Multi-AZ, multi-tier VPC via reusable Terraform modules | Creates the network foundation required for future resilient application and database workloads; the current lab application itself uses one EC2 instance |
 | IAM instance role instead of AWS keys on EC2 | Removes long-lived credentials from the server entirely |
 | Encrypted GP3 volume, SSH restricted to a `/32` | Reduces the attack surface of the only exposed lab host |
 | Immutable ECR tags + scan-on-push | Guarantees a deployed image can never be silently overwritten |
@@ -104,7 +104,7 @@ Most portfolio projects show *an app*. CloudCart shows *the machinery that ships
 | Health-gated deployment (`/health` checked post-deploy) | Deployment is only considered successful if the app actually responds |
 | Startup/readiness/liveness probes + resource limits | Kubernetes only routes traffic to pods that are actually ready |
 | `maxUnavailable: 0` rolling update strategy | The Deployment is *configured* for zero-downtime rollout (not load-tested or proven under traffic) |
-| Topology spread constraints | Prevents both replicas from landing on the same node |
+| Topology spread constraints | Encourages replicas to run on different worker nodes while allowing scheduling to continue when perfect distribution is unavailable |
 | Pod Disruption Budget (`minAvailable: 1`) | Protects availability during voluntary disruptions |
 | Verified pod self-healing | Demonstrated, not assumed — deleted a pod and watched the Deployment recover to `2/2` |
 
@@ -121,8 +121,8 @@ flowchart LR
     C --> D["Amazon ECR"]:::done
     D --> E["Jenkins CI/CD"]:::done
     E --> F["Local Kubernetes"]:::done
-    F --> G["Helm"]:::next
-    G --> H["Argo CD"]:::planned
+    F --> G["Helm"]:::done
+    G --> H["Argo CD"]:::next
     H --> I["Monitoring + Security"]:::planned
     I --> J["Temporary EKS Reference"]:::planned
     J --> K["Full CloudCart App"]:::planned
@@ -132,7 +132,7 @@ flowchart LR
     classDef planned fill:#E5E7EB,stroke:#9CA3AF,color:#111827
 ```
 
-Green = completed and verified. Blue = next (Phase 8). Grey = planned.
+Green = completed and verified. Orange = next (Phase 9). Grey = planned.
 
 ### 2 · Current Implemented Platform — *Implemented*
 
@@ -355,13 +355,13 @@ flowchart TB
 |---:|---|---|:---:|
 | 1 | Docker | Healthy local workload with `/health` | ✅ |
 | 2 | Terraform networking | Multi-AZ, multi-tier VPC | ✅ |
-| 3 | AWS compute | Secure, IAM-rooted EC2 lab | ✅ |
+| 3 | AWS compute | Secure, IAM role-based EC2 lab | ✅ |
 | 4 | Ansible | Repeatable server configuration | ✅ |
 | 5 | ECR | Immutable, scanned, versioned images | ✅ |
 | 6 | Jenkins | Automated, security-gated delivery | ✅ |
 | 7 | Kubernetes | Two replicas, verified self-healing | ✅ |
-| 8 | Helm | Reusable releases, rollback | ▶️ Next |
-| 9 | GitOps | Argo CD reconciliation | 🗓️ Planned |
+| 8 | Helm | Reusable releases, upgrade history and rollback | ✅ |
+| 9 | GitOps | Argo CD reconciliation | ▶️ Next |
 | 10 | Observability | Prometheus, Grafana, alerting | 🗓️ Planned |
 | 11 | Security automation | Gitleaks, Checkov, policy scanning | 🗓️ Planned |
 | 12 | Reliability | HPA, load and recovery testing | 🗓️ Planned |
@@ -372,7 +372,7 @@ flowchart TB
 ```mermaid
 flowchart LR
     P1["1 Docker"]:::done --> P2["2 VPC"]:::done --> P3["3 EC2"]:::done --> P4["4 Ansible"]:::done --> P5["5 ECR"]:::done
-    P5 --> P6["6 Jenkins"]:::done --> P7["7 Kubernetes"]:::done --> P8["8 Helm"]:::next --> P9["9 GitOps"]:::planned --> P10["10 Observability"]:::planned
+    P5 --> P6["6 Jenkins"]:::done --> P7["7 Kubernetes"]:::done --> P8["8 Helm"]:::done --> P9["9 GitOps"]:::next --> P10["10 Observability"]:::planned
     P10 --> P11["11 Security"]:::planned --> P12["12 Reliability"]:::planned --> P13["13 EKS"]:::planned --> P14["14 App"]:::planned --> P15["15 Portfolio"]:::planned
 
     classDef done fill:#22C55E,stroke:#15803D,color:#052e16
@@ -391,7 +391,7 @@ cloudcart-production-devops-platform/
 ├── architecture/            # Diagrams and design notes
 ├── argocd/                  # GitOps definitions (Phase 9, planned)
 ├── docker/
-├── helm/                    # Chart in progress — Phase 8
+├── helm/                    # Reusable chart — Phase 8 completed
 ├── infrastructure/
 │   ├── environments/{lab,dev,staging,production}/
 │   └── modules/{vpc,ec2,ecr}/
@@ -413,7 +413,7 @@ cloudcart-production-devops-platform/
 | `ansible/` | Server configuration roles and playbooks |
 | `jenkins/` | Pipeline-as-code definition |
 | `kubernetes/` | Kind config, base manifests, overlays |
-| `helm/` | Reusable chart (Phase 8, in progress) |
+| `helm/` | Reusable chart, lab values, upgrade history and rollback |
 | `argocd/` | GitOps Application definitions (planned) |
 | `monitoring/` | Prometheus and Grafana configuration (planned) |
 | `security/` | Scan configuration and evidence |
@@ -710,8 +710,8 @@ Screenshots are organized by phase and reference the actual files in the reposit
 | 5 | Amazon ECR | ✅ Completed |
 | 6 | Jenkins CI/CD | ✅ Completed |
 | 7 | Kubernetes foundation | ✅ Completed |
-| 8 | Helm packaging and rollback | ▶️ Next |
-| 9 | Argo CD GitOps | 🗓️ Planned |
+| 8 | Helm packaging and rollback | ✅ Completed |
+| 9 | Argo CD GitOps | ▶️ Next |
 | 10 | Prometheus and Grafana | 🗓️ Planned |
 | 11 | Security automation | 🗓️ Planned |
 | 12 | Reliability and recovery testing | 🗓️ Planned |
@@ -721,33 +721,77 @@ Screenshots are organized by phase and reference the actual files in the reposit
 
 ---
 
-## Phase 8 — Helm Packaging (Detailed Plan)
+## Phase 8 — Helm Packaging ✅
+
+Phase 8 converted the raw Kubernetes resources into a reusable, parameterized Helm chart and safely migrated the existing live resources from kubectl/Kustomize ownership to Helm.
+
+### Completed outcomes
+
+- Created a Helm application chart with `Chart.yaml`, defaults and lab overrides
+- Templated the Deployment, Service, Pod Disruption Budget and optional Namespace
+- Parameterized replicas, image, ports, probes, resources, capabilities, topology spreading and disruption protection
+- Preserved the existing immutable Deployment selector during migration
+- Passed `helm lint`, `helm template` and Kubernetes server-side validation
+- Adopted the existing Deployment, Service and PDB using Helm ownership metadata
+- Resolved Helm 4 server-side apply conflicts with intentional field ownership transfer
+- Installed release revision 1 with two healthy replicas
+- Upgraded revision 2 to three replicas
+- Verified release history and application health
+- Rolled back to revision 1 configuration, creating deployed revision 3
+- Restored two replicas and confirmed HTTP 200 after rollback
+
+> **Current resource manager:** Helm owns the live CloudCart Deployment, Service and Pod Disruption Budget. Do not run `kubectl apply -k kubernetes/base` during normal operation because doing so would introduce competing field managers. The raw manifests remain as the Phase 7 foundation and recovery reference.
+
+### Phase 8 delivery flow
 
 ```mermaid
 flowchart LR
-    Raw["Raw K8s Manifests"] --> Chart["Helm Chart Templates"]
-    Chart --> Values["values.yaml"]
-    Values --> Env["Environment Values"]
-    Env --> Lint["helm lint"]
-    Lint --> Tmpl["helm template"]
-    Tmpl --> Install["helm install"]
-    Install --> Upgrade["helm upgrade"]
-    Upgrade --> Hist["helm history"]
-    Hist --> Rollback["helm rollback"]
+    Raw["Raw Manifests"] --> Chart["Helm Templates"]
+    Chart --> Lint["Lint + Render"]
+    Lint --> Install["Revision 1"]
+    Install --> Upgrade["Revision 2: 3 Pods"]
+    Upgrade --> Rollback["Revision 3: Rollback"]
+    Rollback --> Healthy["2 Pods + HTTP 200"]
 ```
+
+### Selected Phase 8 evidence
+
+| Helm release installed | Helm-managed resources |
+|---|---|
+| ![Helm release installed](screenshots/phase-8/05-helm-release-installed.png) | ![Helm resource ownership](screenshots/phase-8/07-helm-resource-ownership.png) |
+
+| Three replicas after upgrade | Release history after rollback |
+|---|---|
+| ![Three replicas after Helm upgrade](screenshots/phase-8/12-three-replicas-after-upgrade.png) | ![Helm release history](screenshots/phase-8/18-helm-release-history.png) |
+
+| Final Helm status | Health after rollback |
+|---|---|
+| ![Final Helm release status](screenshots/phase-8/21-final-helm-status.png) | ![Health after Helm rollback](screenshots/phase-8/20-health-after-helm-rollback.png) |
+
+<details>
+<summary><strong>View the complete Phase 8 evidence set</strong></summary>
+
+All 21 screenshots are stored in [`screenshots/phase-8/`](screenshots/phase-8/), covering chart structure, linting, rendering, server validation, ownership migration, installation, scaling upgrade, release values, history, rollback and final health.
+
+</details>
+
+---
+
+## Phase 9 — Argo CD GitOps (Next)
+
+The next phase will move deployment reconciliation from manual Helm commands toward a Git-driven workflow.
 
 Planned work:
 
-- Create `Chart.yaml`, `values.yaml`, and reusable templates
-- Parameterize image repository/tag, replica count, ports, probes, resources, security context, topology constraints and the PDB
-- Add environment-specific values for lab, dev, staging and production
-- Run `helm lint` and `helm template` before install
-- Install a named release, perform a version upgrade
-- Inspect `helm history` and demonstrate `helm rollback`
-- Preserve every Phase 7 guarantee (probes, security context, spreading, disruption protection)
-- Capture release and rollback evidence for the portfolio
-
----
+- Install Argo CD on the local Kind cluster
+- Create a declarative Argo CD Application for CloudCart
+- Configure the repository and Helm chart as the desired-state source
+- Demonstrate manual and automatic synchronization
+- Demonstrate drift detection
+- Demonstrate self-healing after an out-of-band change
+- Inspect application health, sync status and deployment history
+- Document a safe responsibility boundary between Jenkins CI and Argo CD CD
+- Capture screenshots and operational troubleshooting evidence
 
 ## Known Limitations
 
@@ -795,6 +839,6 @@ Building practical systems with AWS, Terraform, Ansible, Jenkins, Docker, Kubern
 
 ---
 
-**Phases 1–7 completed · Phase 8, Helm packaging, is next**
+**Phases 1–8 completed · Phase 9, Argo CD GitOps, is next**
 
 </div>

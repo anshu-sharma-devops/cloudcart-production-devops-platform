@@ -4,7 +4,7 @@ This document records errors encountered while building the CloudCart production
 
 ---
 
-```
+
 
 > **Security note:** Commands in this guide use placeholders. Never add AWS credentials, SSH private keys, Jenkins passwords, real public IP addresses, Terraform state, or sensitive inventory values to documentation.
 
@@ -21,6 +21,7 @@ This document records errors encountered while building the CloudCart production
 | 5 | Amazon ECR and IAM | 3 |
 | 6 | Jenkins, Docker and Trivy | 4 |
 | 7 | Kind and Kubernetes | 8 |
+| 8 | Helm packaging and migration | 5 |
 
 ---
 
@@ -1262,6 +1263,169 @@ Use the current Kubernetes API recommended by the warning rather than relying on
 
 ---
 
+# Phase 8 — Helm 4 Packaging and Migration
+
+## 36. Helm template attempted to change an immutable Deployment selector
+
+### Symptom
+
+```text
+The Deployment "cloudcart" is invalid: spec.selector: Invalid value: ... field is immutable
+```
+
+### Root cause
+
+The original Kustomize Deployment selected pods using only `app.kubernetes.io/name`. The first Helm template also added `app.kubernetes.io/instance` to `spec.selector.matchLabels`. Kubernetes does not permit changing a Deployment selector after creation.
+
+### Resolution
+
+Keep the stable application name as the selector and use the Helm release instance only as a normal metadata and pod label:
+
+```gotemplate
+{{- define "cloudcart.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "cloudcart.name" . }}
+{{- end }}
+```
+
+### Verification
+
+```bash
+helm template cloudcart helm/cloudcart --namespace cloudcart \
+  --values helm/cloudcart/values-lab.yaml > /tmp/cloudcart-rendered.yaml
+
+kubectl apply --dry-run=server -f /tmp/cloudcart-rendered.yaml
+```
+
+### Lesson
+
+Plan label and selector conventions before creating workloads. Metadata labels can change, but Deployment selectors are immutable.
+
+---
+
+## 37. Rendered Deployment placed selector labels inside strategy
+
+### Symptom
+
+```text
+strict decoding error: unknown field "spec.strategy.matchLabels"
+```
+
+### Root cause
+
+Template indentation placed `selector.matchLabels` inside the `strategy` mapping.
+
+### Resolution
+
+Align `strategy`, `selector`, and `template` as separate children of Deployment `spec`. Render the chart and inspect its generated YAML before installation.
+
+### Lesson
+
+A chart can pass basic linting while still rendering an invalid Kubernetes object. Use `helm template` and server-side validation together.
+
+---
+
+## 38. Helm 4 installation encountered a server-side field conflict
+
+### Symptom
+
+```text
+conflict with "kubectl-client-side-apply": .spec.revisionHistoryLimit
+```
+
+### Root cause
+
+The existing resources were created with kubectl client-side apply. Helm 4 uses server-side apply and correctly detected that another field manager owned part of the Deployment.
+
+### Resolution
+
+After validating the complete rendered chart and confirming that Helm should become the only manager, install with intentional conflict takeover:
+
+```bash
+helm install cloudcart helm/cloudcart \
+  --namespace cloudcart \
+  --values helm/cloudcart/values-lab.yaml \
+  --force-conflicts \
+  --wait \
+  --timeout 3m
+```
+
+### Lesson
+
+Ownership metadata and Kubernetes field ownership are different concepts. Labels and annotations satisfy Helm release ownership checks; `--force-conflicts` transfers server-side field ownership.
+
+---
+
+## 39. Deprecated Helm 4 atomic flag triggered automatic rollback
+
+### Symptom
+
+```text
+Flag --atomic has been deprecated, use --rollback-on-failure instead
+```
+
+The failed installation then removed the adopted Deployment, Service and PDB during rollback.
+
+### Root cause
+
+The pre-existing resources had already been labelled and annotated as belonging to the Helm release. When installation failed and automatic rollback ran, Helm treated those resources as part of the failed release and removed them.
+
+### Recovery
+
+Restore the working resources from the committed Phase 7 manifests:
+
+```bash
+kubectl apply -k kubernetes/base
+kubectl rollout status deployment/cloudcart -n cloudcart --timeout=180s
+```
+
+Then restore Helm ownership metadata and retry the validated install with `--force-conflicts`, without automatic rollback during this one-time migration.
+
+### Lesson
+
+Automatic rollback is useful for normal Helm-managed releases, but adopting pre-existing resources requires additional care. Back up resources and avoid automatic deletion behavior until ownership migration succeeds.
+
+---
+
+## 40. Helm release upgrade and rollback behavior
+
+### Demonstration
+
+Revision 1 installed two replicas. Revision 2 used a safe override to scale to three replicas:
+
+```bash
+helm upgrade cloudcart helm/cloudcart \
+  --namespace cloudcart \
+  --values helm/cloudcart/values-lab.yaml \
+  --set replicaCount=3 \
+  --force-conflicts \
+  --wait \
+  --timeout 3m
+```
+
+The release was then restored to revision 1 configuration:
+
+```bash
+helm rollback cloudcart 1 \
+  --namespace cloudcart \
+  --force-conflicts \
+  --wait \
+  --timeout 3m
+```
+
+### Verification
+
+```bash
+helm history cloudcart -n cloudcart
+kubectl get deployment,pods -n cloudcart -o wide
+curl -i http://localhost:8082/health
+```
+
+### Lesson
+
+A rollback does not delete history. It creates a new deployed revision using the selected earlier revision’s configuration.
+
+---
+
 # Standard Diagnostic Commands
 
 ## Docker
@@ -1408,6 +1572,6 @@ The engineering principle learned from the incident.
 
 ## Current Coverage
 
-This guide covers completed work through **Phase 7 — Kubernetes Foundation**.
+This guide covers completed work through **Phase 8 — Helm Packaging and Rollback**.
 
 Future issues from Helm, Argo CD, monitoring, security automation, reliability testing, EKS, and application integration will be added only after those phases are implemented and verified.
