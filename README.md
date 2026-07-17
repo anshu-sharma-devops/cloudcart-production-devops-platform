@@ -16,8 +16,8 @@
 [![Trivy](https://img.shields.io/badge/Trivy-Security_Scanning-1904DA?logo=aquasecurity&logoColor=white)](https://trivy.dev/)
 
 [![Status](https://img.shields.io/badge/Status-Active_Development-F59E0B)](#current-status)
-[![Completed](https://img.shields.io/badge/Completed-Phases_1--8-22C55E)](#implementation-roadmap)
-[![Next](https://img.shields.io/badge/Next-Phase_9_Argo_CD-EF7B4D)](#phase-9--argo-cd-gitops-next)
+[![Completed](https://img.shields.io/badge/Completed-Phases_1--10-22C55E)](#implementation-roadmap)
+[![Next](https://img.shields.io/badge/Next-Phase_11_Security_Automation-EF7B4D)](#phase-11--security-automation-next)
 [![Cost](https://img.shields.io/badge/Cost-Free_Tier_Conscious-16A34A)](#cost-control-decisions)
 [![Quality Checks](https://github.com/anshu-sharma-devops/cloudcart-production-devops-platform/actions/workflows/quality-checks.yml/badge.svg?branch=main)](https://github.com/anshu-sharma-devops/cloudcart-production-devops-platform/actions/workflows/quality-checks.yml)
 [![Container Build](https://github.com/anshu-sharma-devops/cloudcart-production-devops-platform/actions/workflows/container-build.yml/badge.svg?branch=main)](https://github.com/anshu-sharma-devops/cloudcart-production-devops-platform/actions/workflows/container-build.yml)
@@ -33,14 +33,14 @@
 | Category | Current state |
 |---|---|
 | Project type | Production-style DevOps portfolio platform |
-| Completed milestone | Phase 8 — Helm packaging and rollback |
-| Next milestone | Phase 9 — Argo CD GitOps |
+| Completed milestone | Phase 10 — Prometheus, Grafana and availability alerting |
+| Next milestone | Phase 11 — Security automation |
 | AWS environment | Cost-controlled EC2 + ECR lab (`ap-south-1`) |
-| Kubernetes environment | Helm-managed release on a local three-node **Kind** cluster (not EKS) |
-| CI/CD | Jenkins pipeline — checkout → build → scan → deploy, completed |
+| Kubernetes environment | Argo CD-managed release on a local three-node **Kind** cluster (not EKS) |
+| CI/CD | Jenkins builds and scans; Argo CD reconciles the Helm release from Git |
 | Application workload | Nginx placeholder |
-| Current replicas | Two, spread across two worker nodes |
-| Self-healing | Verified by manual pod deletion |
+| Current replicas | Three, continuously reconciled from Git |
+| Self-healing | Kubernetes pod recovery and Argo CD drift repair verified |
 | Full e-commerce application | Planned — Phase 14 |
 
 > CloudCart is a portfolio and learning project. It follows production-grade *patterns* — IaC, least privilege, immutable artifacts, health-gated deployment, self-healing — but it is not a live commercial system. Real production adoption would additionally require organization-specific security review, load testing, managed data stores, alerting and long-term operational history.
@@ -53,7 +53,7 @@ CloudCart simulates a growing e-commerce company that needs to ship changes safe
 
 Today, that platform provisions AWS networking and compute with Terraform, configures servers with Ansible, builds and scans container images, stores them in a private registry, deploys them through a Jenkins pipeline, and runs the workload on Kubernetes with health checks, resource limits and automatic recovery. The current application is intentionally a lightweight Nginx placeholder so the platform itself can be demonstrated cleanly before a real frontend, API and database are layered on top in Phase 14.
 
-Eight phases are complete and verified. Phase 9, implementing GitOps reconciliation with Argo CD, is next.
+Ten phases are complete and verified. Phase 11, expanding automated security controls and policy checks, is next.
 
 ---
 
@@ -85,8 +85,11 @@ Most portfolio projects show *an app*. CloudCart shows *the machinery that ships
 - **Configuration automation:** Ansible roles that install Docker, AWS CLI and deploy the application idempotently.
 - **Secure container registry:** immutable, scanned, encrypted image storage in Amazon ECR.
 - **CI/CD pipeline:** a Jenkins pipeline-as-code that validates, builds, tests, scans, publishes and deploys — with a hard security gate.
-- **Kubernetes platform:** a three-node local Kind cluster running two replicas with health probes, resource limits, topology spreading, a Service, and a Pod Disruption Budget.
-- **Verified self-healing:** manually deleted a pod and confirmed Kubernetes restored the desired state automatically.
+- **Kubernetes platform:** a three-node local Kind cluster running three Git-reconciled replicas with health probes, resource limits, topology spreading, a Service, and a Pod Disruption Budget.
+- **Helm release engineering:** a reusable application chart with validated rendering, installation, upgrades, release history and rollback.
+- **GitOps delivery:** Argo CD renders the Helm chart from Git, synchronizes changes, prunes removed resources and repairs live drift.
+- **Observability:** Prometheus and Grafana collect cluster metrics; Blackbox Exporter probes CloudCart and a PrometheusRule raises a critical availability alert.
+- **Verified recovery:** Kubernetes pod replacement, Argo CD drift repair, Git-driven scaling and monitoring alert recovery were demonstrated.
 - **Documentation discipline:** troubleshooting notes, evidence, and an explicit roadmap separating what's done from what's planned.
 
 ---
@@ -107,12 +110,15 @@ Most portfolio projects show *an app*. CloudCart shows *the machinery that ships
 | Topology spread constraints | Encourages replicas to run on different worker nodes while allowing scheduling to continue when perfect distribution is unavailable |
 | Pod Disruption Budget (`minAvailable: 1`) | Protects availability during voluntary disruptions |
 | Verified pod self-healing | Demonstrated, not assumed — deleted a pod and watched the Deployment recover to `2/2` |
+| Helm upgrade and rollback | Proves controlled release change and recovery using versioned release history |
+| Argo CD automated sync and self-heal | Makes Git the desired-state source and repairs unauthorized live changes |
+| Blackbox probe plus critical alert | Verifies user-facing health and proves detection, firing and recovery behavior |
 
 ---
 
 ## Architecture Overview
 
-### 1 · Project Evolution — *Implemented phases 1–7, remainder planned*
+### 1 · Project Evolution — *Implemented phases 1–10, remainder planned*
 
 ```mermaid
 flowchart LR
@@ -122,17 +128,18 @@ flowchart LR
     D --> E["Jenkins CI/CD"]:::done
     E --> F["Local Kubernetes"]:::done
     F --> G["Helm"]:::done
-    G --> H["Argo CD"]:::next
-    H --> I["Monitoring + Security"]:::planned
-    I --> J["Temporary EKS Reference"]:::planned
-    J --> K["Full CloudCart App"]:::planned
+    G --> H["Argo CD"]:::done
+    H --> I["Prometheus + Grafana"]:::done
+    I --> J["Security Automation"]:::next
+    J --> K["Temporary EKS Reference"]:::planned
+    K --> L["Full CloudCart App"]:::planned
 
     classDef done fill:#22C55E,stroke:#15803D,color:#052e16
     classDef next fill:#0F1689,stroke:#0F1689,color:#ffffff
     classDef planned fill:#E5E7EB,stroke:#9CA3AF,color:#111827
 ```
 
-Green = completed and verified. Orange = next (Phase 9). Grey = planned.
+Green = completed and verified. Blue = next (Phase 11). Grey = planned.
 
 ### 2 · Current Implemented Platform — *Implemented*
 
@@ -711,9 +718,9 @@ Screenshots are organized by phase and reference the actual files in the reposit
 | 6 | Jenkins CI/CD | ✅ Completed |
 | 7 | Kubernetes foundation | ✅ Completed |
 | 8 | Helm packaging and rollback | ✅ Completed |
-| 9 | Argo CD GitOps | ▶️ Next |
-| 10 | Prometheus and Grafana | 🗓️ Planned |
-| 11 | Security automation | 🗓️ Planned |
+| 9 | Argo CD GitOps | ✅ Completed |
+| 10 | Prometheus, Grafana and availability alerting | ✅ Completed |
+| 11 | Security automation | ▶️ Next |
 | 12 | Reliability and recovery testing | 🗓️ Planned |
 | 13 | Temporary AWS EKS reference | 🗓️ Planned |
 | 14 | Full CloudCart application | 🗓️ Planned |
@@ -777,29 +784,99 @@ All 21 screenshots are stored in [`screenshots/phase-8/`](screenshots/phase-8/),
 
 ---
 
-## Phase 9 — Argo CD GitOps (Next)
+## Phase 9 — Argo CD GitOps ✅
 
-The next phase will move deployment reconciliation from manual Helm commands toward a Git-driven workflow.
+Phase 9 moved Kubernetes delivery from manual Helm commands to continuous Git reconciliation. Argo CD v3.4.5 runs in the Kind cluster and treats this repository's Helm chart and `values-gitops.yaml` as the desired state.
 
-Planned work:
+### Completed outcomes
 
-- Install Argo CD on the local Kind cluster
-- Create a declarative Argo CD Application for CloudCart
-- Configure the repository and Helm chart as the desired-state source
-- Demonstrate manual and automatic synchronization
-- Demonstrate drift detection
-- Demonstrate self-healing after an out-of-band change
-- Inspect application health, sync status and deployment history
-- Document a safe responsibility boundary between Jenkins CI and Argo CD CD
-- Capture screenshots and operational troubleshooting evidence
+- Installed the Argo CD controllers, API server, repository server, Redis, Dex and notification controller
+- Defined a restricted AppProject and declarative Application
+- Enabled automatic sync, pruning, self-healing, retry and namespace creation
+- Deployed CloudCart into the separate `cloudcart-gitops` namespace
+- Created manual replica drift and watched Argo CD restore the Git value
+- Changed the replica count in Git from two to three and verified automatic rollout
+- Confirmed `Synced`, `Healthy`, three running pods and HTTP 200
+
+```mermaid
+flowchart TD
+    Dev["Developer commit"] --> Git["GitHub main"]
+    Git --> Argo["Argo CD"]
+    Argo --> Helm["Render Helm chart"]
+    Helm --> K8s["cloudcart-gitops"]
+    Drift["Manual drift"] --> Argo
+    K8s --> Healthy["3 Pods + HTTP 200"]
+```
+
+| Healthy application | Resource tree |
+|---|---|
+| ![Argo CD application healthy](screenshots/phase-9/03-argocd-application-healthy.png) | ![Argo CD resource tree](screenshots/phase-9/04-argocd-resource-tree.png) |
+
+| Drift repaired | Three replicas from Git |
+|---|---|
+| ![Argo CD self-healing](screenshots/phase-9/09-argocd-self-healing.png) | ![GitOps replicas](screenshots/phase-9/12-replicas-after-git-sync.png) |
+
+All evidence is stored in [`screenshots/phase-9/`](screenshots/phase-9/).
+
+---
+
+## Phase 10 — Prometheus, Grafana and Availability Alerting ✅
+
+Phase 10 added local observability without creating AWS cost. The pinned kube-prometheus-stack provides Prometheus, Grafana, Alertmanager, kube-state-metrics, node-exporter and the Prometheus Operator. Blackbox Exporter tests the real CloudCart health endpoint.
+
+### Completed outcomes
+
+- Installed kube-prometheus-stack chart `87.17.0` (app `v0.92.1`)
+- Stored Grafana administrator credentials in a Kubernetes Secret, outside Git
+- Configured bounded resources and 24-hour lab retention
+- Visualized cluster and CloudCart namespace metrics in Grafana
+- Verified Prometheus readiness and scrape targets
+- Installed Blackbox Exporter chart `11.15.1` (app `v0.28.0`)
+- Created a Prometheus Probe for `/health` and verified `probe_success = 1`
+- Created the critical `CloudCartEndpointDown` PrometheusRule
+- Injected a safe monitoring failure, observed the alert firing, restored the target and verified recovery
+
+```mermaid
+flowchart LR
+    Prom["Prometheus"] --> Blackbox["Blackbox Exporter"]
+    Blackbox --> Health["CloudCart /health"]
+    Prom --> Grafana["Grafana"]
+    Prom --> Rule["CloudCartEndpointDown"]
+    Rule --> Alert["Alertmanager"]
+```
+
+| Monitoring pods | Grafana cluster dashboard |
+|---|---|
+| ![Monitoring pods](screenshots/phase-10/02-monitoring-pods-running.png) | ![Grafana dashboard](screenshots/phase-10/04-grafana-cluster-dashboard.png) |
+
+| Prometheus targets | Alert firing |
+|---|---|
+| ![Prometheus targets](screenshots/phase-10/07-prometheus-targets.png) | ![CloudCart alert firing](screenshots/phase-10/12-cloudcart-alert-firing.png) |
+
+| Monitoring recovered |
+|---|
+| ![Monitoring recovery](screenshots/phase-10/13-cloudcart-monitoring-recovered.png) |
+
+> The saved Phase 10 evidence contains screenshots 01–08, 12 and 13. Missing sequence numbers are not linked because those images were not saved; the alert-firing and recovery evidence is present.
+
+---
+
+## Phase 11 — Security Automation (Next)
+
+- Add Kubernetes, Helm and infrastructure misconfiguration checks to CI
+- Add secret detection and dependency checks
+- Define severity gates and a documented exception workflow
+- Evaluate policy-as-code controls suitable for the free local lab
+
+---
 
 ## Known Limitations
 
 - The application is a placeholder — not yet the full CloudCart e-commerce experience
-- Kubernetes runs on local Kind, not a continuously running EKS cluster
+- Kubernetes, GitOps and monitoring run on local Kind, not a continuously running managed cluster
 - Jenkins runs locally, not as a managed always-on service
 - The AWS lab EC2 host is internet-facing for learning convenience, not hardened for public production traffic
-- No HTTPS, WAF, managed database or centralized observability yet
+- Observability is local and ephemeral; durable storage, external notifications and long-term retention remain future work
 - Horizontal Pod Autoscaling has not been demonstrated
 - Zero-downtime rollout is *configured* (`maxUnavailable: 0`), not load-tested or proven under real traffic
 - Backup, restore, load and disaster-recovery testing remain planned
@@ -822,7 +899,7 @@ Planned work:
 
 ## Interview Explanation
 
-> CloudCart is a production-style DevOps platform I'm building from the ground up. I containerized a small Nginx workload, then provisioned a multi-tier AWS network, EC2 compute and ECR with reusable Terraform modules. I automated server configuration with Ansible and built a Jenkins pipeline that validates, builds, tests, scans with Trivy, pushes an immutable image to ECR, and deploys to EC2 with a post-deploy health check. I then stood up a three-node Kind cluster and deployed two replicas with probes, resource limits, rolling updates, topology spreading, a Service and a Pod Disruption Budget — and proved self-healing by deleting a pod and watching Kubernetes restore it. Next I'm packaging the release with Helm, followed by GitOps and monitoring.
+> CloudCart is a production-style DevOps platform I built from the ground up. I containerized an Nginx workload, provisioned a multi-tier AWS network, EC2 and ECR with Terraform, automated host configuration with Ansible, and created a Jenkins pipeline that validates, tests, scans, publishes and deploys immutable images. I built a three-node Kind platform, packaged the workload with Helm, demonstrated upgrade and rollback, and moved deployment reconciliation to Argo CD with automated sync, pruning and drift repair. Finally, I added Prometheus, Grafana, Alertmanager and Blackbox Exporter, triggered a real availability alert and verified recovery. The current workload is intentionally a placeholder and the Kubernetes environment is local rather than production EKS.
 
 ---
 
@@ -833,12 +910,12 @@ Planned work:
 ### Anshu Sharma
 **Aspiring Cloud and DevOps Engineer**
 
-Building practical systems with AWS, Terraform, Ansible, Jenkins, Docker, Kubernetes, Helm and GitOps.
+Building practical systems with AWS, Terraform, Ansible, Jenkins, Docker, Kubernetes, Helm, Argo CD, Prometheus and Grafana.
 
 [![GitHub](https://img.shields.io/badge/GitHub-anshu--sharma--devops-181717?logo=github&logoColor=white)](https://github.com/anshu-sharma-devops)
 
 ---
 
-**Phases 1–8 completed · Phase 9, Argo CD GitOps, is next**
+**Phases 1–10 completed · Phase 11, Security Automation, is next**
 
 </div>
