@@ -79,8 +79,11 @@ spec:
               drop:
                 - ALL
               add:
+                - CHOWN
                 - NET_BIND_SERVICE
-
+                - SETGID
+                - SETUID
+                
       topologySpreadConstraints:
         - maxSkew: 1
           topologyKey: kubernetes.io/hostname
