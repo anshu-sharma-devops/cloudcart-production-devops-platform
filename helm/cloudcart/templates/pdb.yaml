@@ -1,0 +1,17 @@
+{{- if .Values.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "cloudcart.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "cloudcart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+
+spec:
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+
+  selector:
+    matchLabels:
+      {{- include "cloudcart.selectorLabels" . | nindent 6 }}
+{{- end }}

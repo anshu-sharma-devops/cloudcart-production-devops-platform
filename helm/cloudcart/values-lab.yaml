@@ -1,0 +1,33 @@
+replicaCount: 2
+
+image:
+  repository: cloudcart-placeholder
+  tag: k8s-v1
+  pullPolicy: IfNotPresent
+
+namespace:
+  create: false
+
+service:
+  type: NodePort
+  port: 80
+  targetPort: 80
+  nodePort: 30080
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+topologySpreadConstraints:
+  enabled: true
+  maxSkew: 1
+  topologyKey: kubernetes.io/hostname
+  whenUnsatisfiable: ScheduleAnyway
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1

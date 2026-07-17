@@ -1,0 +1,26 @@
+apiVersion: v2
+name: cloudcart
+description: Production-style Helm chart for the CloudCart application
+type: application
+
+version: 0.1.0
+appVersion: "1.0.0"
+
+home: https://github.com/anshu-sharma-devops/cloudcart-production-devops-platform
+
+sources:
+  - https://github.com/anshu-sharma-devops/cloudcart-production-devops-platform
+
+maintainers:
+  - name: Anshu Sharma
+
+keywords:
+  - cloudcart
+  - ecommerce
+  - devops
+  - kubernetes
+  - helm
+  - nginx
+
+annotations:
+  category: Application

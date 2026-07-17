@@ -1,0 +1,97 @@
+replicaCount: 2
+
+image:
+  repository: cloudcart-placeholder
+  tag: k8s-v1
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+nameOverride: ""
+fullnameOverride: ""
+
+namespace:
+  create: false
+
+service:
+  type: NodePort
+  port: 80
+  targetPort: 80
+  nodePort: 30080
+
+containerPort: 80
+
+deployment:
+  revisionHistoryLimit: 5
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+
+terminationGracePeriodSeconds: 30
+
+probes:
+  startup:
+    enabled: true
+    path: /health
+    periodSeconds: 2
+    timeoutSeconds: 2
+    failureThreshold: 30
+
+  readiness:
+    enabled: true
+    path: /health
+    initialDelaySeconds: 2
+    periodSeconds: 5
+    timeoutSeconds: 2
+    failureThreshold: 3
+
+  liveness:
+    enabled: true
+    path: /health
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    timeoutSeconds: 2
+    failureThreshold: 3
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+    add:
+      - CHOWN
+      - NET_BIND_SERVICE
+      - SETGID
+      - SETUID
+
+topologySpreadConstraints:
+  enabled: true
+  maxSkew: 1
+  topologyKey: kubernetes.io/hostname
+  whenUnsatisfiable: ScheduleAnyway
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+podLabels:
+  app.kubernetes.io/component: frontend
+
+podAnnotations: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

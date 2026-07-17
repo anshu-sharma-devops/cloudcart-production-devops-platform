@@ -1,0 +1,110 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cloudcart.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "cloudcart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+spec:
+  replicas: {{ .Values.replicaCount }}
+  revisionHistoryLimit: {{ .Values.deployment.revisionHistoryLimit }}
+
+  strategy:
+    type: {{ .Values.deployment.strategy.type }}
+    rollingUpdate:
+      maxUnavailable: {{ .Values.deployment.strategy.rollingUpdate.maxUnavailable }}
+      maxSurge: {{ .Values.deployment.strategy.rollingUpdate.maxSurge }}
+
+  selector:
+    matchLabels:
+      {{- include "cloudcart.selectorLabels" . | nindent 6 }}
+
+  template:
+    metadata:
+      labels:
+        {{- include "cloudcart.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+    spec:
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      containers:
+        - name: {{ include "cloudcart.name" . }}
+
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+
+          ports:
+            - name: http
+              containerPort: {{ .Values.containerPort }}
+              protocol: TCP
+
+          {{- if .Values.probes.startup.enabled }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.probes.startup.path }}
+              port: http
+            periodSeconds: {{ .Values.probes.startup.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.startup.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.startup.failureThreshold }}
+          {{- end }}
+
+          {{- if .Values.probes.readiness.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.probes.readiness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.readiness.failureThreshold }}
+          {{- end }}
+
+          {{- if .Values.probes.liveness.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.probes.liveness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.liveness.failureThreshold }}
+          {{- end }}
+
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+
+          securityContext:
+            {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+
+      {{- if .Values.topologySpreadConstraints.enabled }}
+      topologySpreadConstraints:
+        - maxSkew: {{ .Values.topologySpreadConstraints.maxSkew }}
+          topologyKey: {{ .Values.topologySpreadConstraints.topologyKey }}
+          whenUnsatisfiable: {{ .Values.topologySpreadConstraints.whenUnsatisfiable }}
+          labelSelector:
+            matchLabels:
+              {{- include "cloudcart.selectorLabels" . | nindent 14 }}
+      {{- end }}
+
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

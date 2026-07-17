@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "cloudcart.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "cloudcart.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+
+spec:
+  type: {{ .Values.service.type }}
+
+  selector:
+    {{- include "cloudcart.selectorLabels" . | nindent 4 }}
+
+  ports:
+    - name: http
+      protocol: TCP
+      port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.targetPort }}
+      {{- if and (eq .Values.service.type "NodePort") .Values.service.nodePort }}
+      nodePort: {{ .Values.service.nodePort }}
+      {{- end }}
