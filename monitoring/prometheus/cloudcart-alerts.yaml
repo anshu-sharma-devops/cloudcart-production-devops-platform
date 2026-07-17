@@ -1,0 +1,25 @@
+
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: cloudcart-alerts
+  namespace: monitoring
+  labels:
+    release: monitoring
+    app.kubernetes.io/name: cloudcart
+spec:
+  groups:
+    - name: cloudcart.availability
+      rules:
+        - alert: CloudCartEndpointDown
+          expr: probe_success{application="cloudcart"} == 0
+          for: 1m
+          labels:
+            severity: critical
+            team: platform
+            environment: lab
+          annotations:
+            summary: CloudCart health endpoint is unavailable
+            description: >-
+              Prometheus has been unable to reach the CloudCart health
+              endpoint for more than one minute.

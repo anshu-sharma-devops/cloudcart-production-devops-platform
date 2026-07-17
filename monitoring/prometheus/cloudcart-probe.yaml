@@ -1,0 +1,28 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: cloudcart-health
+  namespace: monitoring
+  labels:
+    release: monitoring
+    app.kubernetes.io/name: cloudcart
+    app.kubernetes.io/component: health-check
+spec:
+  jobName: cloudcart-health
+  interval: 15s
+  scrapeTimeout: 10s
+
+  module: http_2xx
+
+  prober:
+    url: blackbox-prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
+    path: /probe
+    scheme: http
+
+  targets:
+    staticConfig:
+      static:
+        - http://cloudcart.cloudcart-gitops.svc.cluster.local/health
+      labels:
+        application: cloudcart
+        environment: lab
