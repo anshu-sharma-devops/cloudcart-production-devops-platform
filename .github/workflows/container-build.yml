@@ -1,0 +1,67 @@
+name: Container Build
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "application/placeholder/**"
+      - ".github/workflows/container-build.yml"
+
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "application/placeholder/**"
+      - ".github/workflows/container-build.yml"
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Build and Health Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build CloudCart container image
+        run: |
+          docker build \
+            --tag cloudcart-placeholder:ci \
+            application/placeholder
+
+      - name: Start CloudCart container
+        run: |
+          docker run --detach \
+            --name cloudcart-ci \
+            --publish 8080:80 \
+            cloudcart-placeholder:ci
+
+      - name: Verify application health
+        run: |
+          for attempt in {1..10}; do
+            if curl --fail --silent http://127.0.0.1:8080/health; then
+              echo "CloudCart health check passed"
+              exit 0
+            fi
+
+            echo "Waiting for CloudCart: attempt ${attempt}/10"
+            sleep 2
+          done
+
+          echo "CloudCart health check failed"
+          docker logs cloudcart-ci
+          exit 1
+
+      - name: Show container status
+        if: always()
+        run: docker ps --all
+
+      - name: Clean up container
+        if: always()
+        run: docker rm --force cloudcart-ci || true
