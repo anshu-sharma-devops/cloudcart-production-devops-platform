@@ -22,6 +22,8 @@ This document records errors encountered while building the CloudCart production
 | 6 | Jenkins, Docker and Trivy | 4 |
 | 7 | Kind and Kubernetes | 8 |
 | 8 | Helm packaging and migration | 5 |
+| 9 | Argo CD GitOps | 3 |
+| 10 | Prometheus, Grafana and alerting | 3 |
 
 ---
 
@@ -371,7 +373,7 @@ An interactive confirmation value was entered where Terraform expected an IPv4 C
 
 ### Resolution
 
-Get the administrator’s current public IP:
+Get the administrator”™s current public IP:
 
 ```bash
 curl -s https://checkip.amazonaws.com
@@ -1426,6 +1428,157 @@ A rollback does not delete history. It creates a new deployed revision using the
 
 ---
 
+# Phase 9 — Argo CD GitOps
+
+## 41. Kubernetes warned about the Argo CD finalizer name
+
+### Symptom
+
+```text
+prefer a domain-qualified finalizer name including a path
+```
+
+### Root cause
+
+The Application used Argo CD's legacy foreground-unspecified finalizer.
+
+### Resolution
+
+```yaml
+finalizers:
+  - resources-finalizer.argocd.argoproj.io/foreground
+```
+
+### Lesson
+
+Treat dry-run warnings as useful compatibility signals.
+
+---
+
+## 42. Argo CD did not show a Git change immediately
+
+### Root cause
+
+Without a GitHub webhook, Argo CD polls the repository periodically.
+
+### Resolution
+
+```bash
+kubectl get application cloudcart-gitops -n argocd --watch
+```
+
+Wait for `Synced` and `Healthy`.
+
+### Lesson
+
+Continuous reconciliation is asynchronous; a short polling delay is not a failed deployment.
+
+---
+
+## 43. CloudCart localhost URL failed while Argo CD was healthy
+
+### Symptom
+
+```text
+curl: (7) Failed to connect to localhost port 8084
+```
+
+### Root cause
+
+The temporary `kubectl port-forward` process had ended. The in-cluster application was healthy.
+
+### Resolution
+
+```bash
+kubectl port-forward service/cloudcart \
+  --namespace cloudcart-gitops 8084:80
+```
+
+### Lesson
+
+Separate application health from temporary local access tooling.
+
+---
+
+# Phase 10 — Prometheus, Grafana and Alerting
+
+## 44. Helm 4 lint rejected the repository chart version flag
+
+### Symptom
+
+```text
+Error: unknown flag: --version
+```
+
+### Root cause
+
+Helm 4 `lint` does not accept `--version` for a repository chart.
+
+### Resolution
+
+Use `helm template` with the pinned version, then install the same version:
+
+```bash
+helm template monitoring prometheus-community/kube-prometheus-stack \
+  --version 87.17.0 --namespace monitoring \
+  --values monitoring/kube-prometheus-stack/values-lab.yaml \
+  > /tmp/monitoring-rendered.yaml
+```
+
+### Lesson
+
+Pin versions during rendering and installation instead of silently using latest.
+
+---
+
+## 45. Kubernetes internal DNS URL was entered as a shell command
+
+### Symptom
+
+```text
+zsh: no such file or directory:
+http://cloudcart.cloudcart-gitops.svc.cluster.local/health
+```
+
+### Root cause
+
+A `.svc.cluster.local` URL is for clients inside Kubernetes, not an executable Mac command.
+
+### Resolution
+
+Let Blackbox Exporter probe the internal URL. For Mac testing, use `http://localhost:8084/health` with port-forwarding.
+
+### Lesson
+
+Host URLs, Kubernetes Service DNS and public cloud URLs are separate network paths.
+
+---
+
+## 46. Alert recovery succeeded but localhost verification failed
+
+### Root cause
+
+The Probe target was restored and Argo CD was healthy, but the unrelated local port-forward was no longer running.
+
+### Resolution
+
+Verify each layer independently:
+
+```bash
+kubectl get probe cloudcart-health -n monitoring
+kubectl get application cloudcart-gitops -n argocd
+kubectl port-forward service/cloudcart -n cloudcart-gitops 8084:80
+curl -i http://localhost:8084/health
+```
+
+Prometheus returned `probe_success = 1` and the alert resolved.
+
+### Lesson
+
+Validate desired configuration, in-cluster health, monitoring state and local access separately.
+
+---
+
 # Standard Diagnostic Commands
 
 ## Docker
@@ -1572,6 +1725,6 @@ The engineering principle learned from the incident.
 
 ## Current Coverage
 
-This guide covers completed work through **Phase 8 — Helm Packaging and Rollback**.
+This guide covers completed work through **Phase 10 — Prometheus, Grafana and Availability Alerting**.
 
-Future issues from Helm, Argo CD, monitoring, security automation, reliability testing, EKS, and application integration will be added only after those phases are implemented and verified.
+Future issues from security automation, reliability testing, EKS, and full application integration will be added only after those phases are implemented and verified.
