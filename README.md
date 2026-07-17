@@ -19,6 +19,7 @@
 [![Completed](https://img.shields.io/badge/Completed-Phases_1--7-22C55E)](#implementation-roadmap)
 [![Next](https://img.shields.io/badge/Next-Phase_8_Helm-0F1689)](#phase-8--helm-packaging-detailed-plan)
 [![License](https://img.shields.io/badge/Cost-Free_Tier_Conscious-16A34A)](#cost-control-decisions)
+[![Quality Checks](https://github.com/anshu-sharma-devops/cloudcart-production-devops-platform/actions/workflows/quality-checks.yml/badge.svg?branch=main)](https://github.com/anshu-sharma-devops/cloudcart-production-devops-platform/actions/workflows/quality-checks.yml)
 
 **[Executive Summary](#executive-summary) · [What I Built](#what-i-built) · [Architecture](#architecture-overview) · [Kubernetes](#kubernetes-architecture) · [Run It](#docker-quick-start) · [Roadmap](#implementation-roadmap) · [Evidence](#project-evidence) · [Security](#security-controls)**
 
