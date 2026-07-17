@@ -1,0 +1,44 @@
+name: Quality Checks
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  terraform-format:
+    name: Terraform Format
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.7
+
+      - name: Check Terraform formatting
+        run: terraform fmt -check -recursive infrastructure/
+
+  dockerfile-lint:
+    name: Dockerfile Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: application/placeholder/Dockerfile
+          failure-threshold: error
