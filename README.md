@@ -6,6 +6,8 @@
 
 **One-line value:** CloudCart proves, end to end, that I can take an application from source code to a health-verified, self-healing, security-gated deployment — using the same tools and patterns real engineering teams use.
 
+<br>
+
 [![AWS](https://img.shields.io/badge/AWS-ap--south--1-FF9900?logo=amazonwebservices&logoColor=white)](https://aws.amazon.com/)
 [![Terraform](https://img.shields.io/badge/Terraform-Infrastructure_as_Code-844FBA?logo=terraform&logoColor=white)](https://developer.hashicorp.com/terraform)
 [![Ansible](https://img.shields.io/badge/Ansible-Configuration_Automation-EE0000?logo=ansible&logoColor=white)](https://www.ansible.com/)
@@ -22,32 +24,36 @@
 [![Quality Checks](https://github.com/anshu-sharma-devops/cloudcart-production-devops-platform/actions/workflows/quality-checks.yml/badge.svg?branch=main)](https://github.com/anshu-sharma-devops/cloudcart-production-devops-platform/actions/workflows/quality-checks.yml)
 [![Container Build](https://github.com/anshu-sharma-devops/cloudcart-production-devops-platform/actions/workflows/container-build.yml/badge.svg?branch=main)](https://github.com/anshu-sharma-devops/cloudcart-production-devops-platform/actions/workflows/container-build.yml)
 
-**[Executive Summary](#executive-summary) · [What I Built](#what-i-built) · [Architecture](#architecture-overview) · [Kubernetes](#kubernetes-architecture) · [Run It](#docker-quick-start) · [Roadmap](#implementation-roadmap) · [Evidence](#project-evidence) · [Security](#security-controls)**
+<br>
+
+**[📋 Executive Summary](#executive-summary) · [🧱 What I Built](#what-i-built) · [🏗️ Architecture](#architecture-overview) · [☸️ Kubernetes](#-kubernetes-architecture) · [🚀 Run It](#docker-quick-start) · [🗺️ Roadmap](#implementation-roadmap) · [📸 Evidence](#project-evidence) · [🔐 Security](#security-controls)**
 
 </div>
 
 ---
 
-## Project Snapshot
+## 📌 Project Snapshot
 
 | Category | Current state |
 |---|---|
-| Project type | Production-style DevOps portfolio platform |
-| Completed milestone | Phase 10 — Prometheus, Grafana and availability alerting |
-| Next milestone | Phase 11 — Security automation |
-| AWS environment | Cost-controlled EC2 + ECR lab (`ap-south-1`) |
-| Kubernetes environment | Argo CD-managed release on a local three-node **Kind** cluster (not EKS) |
-| CI/CD | Jenkins builds and scans; Argo CD reconciles the Helm release from Git |
-| Application workload | Nginx placeholder |
-| Current replicas | Three, continuously reconciled from Git |
-| Self-healing | Kubernetes pod recovery and Argo CD drift repair verified |
-| Full e-commerce application | Planned — Phase 14 |
+| 🏷️ Project type | Production-style DevOps portfolio platform |
+| ✅ Completed milestone | Phase 10 — Prometheus, Grafana and availability alerting |
+| ▶️ Next milestone | Phase 11 — Security automation |
+| ☁️ AWS environment | Cost-controlled EC2 + ECR lab (`ap-south-1`) |
+| ☸️ Kubernetes environment | Argo CD-managed release on a local three-node **Kind** cluster (not EKS) |
+| 🔄 CI/CD | Jenkins builds and scans; Argo CD reconciles the Helm release from Git |
+| 📦 Application workload | Nginx placeholder |
+| 🔢 Current replicas | Three, continuously reconciled from Git |
+| 🛠️ Self-healing | Kubernetes pod recovery and Argo CD drift repair verified |
+| 🛍️ Full e-commerce application | Planned — Phase 14 |
 
-> CloudCart is a portfolio and learning project. It follows production-grade *patterns* — IaC, least privilege, immutable artifacts, health-gated deployment, self-healing — but it is not a live commercial system. Real production adoption would additionally require organization-specific security review, load testing, managed data stores, alerting and long-term operational history.
+> ℹ️ CloudCart is a portfolio and learning project. It follows production-grade *patterns* — IaC, least privilege, immutable artifacts, health-gated deployment, self-healing — but it is not a live commercial system. Real production adoption would additionally require organization-specific security review, load testing, managed data stores, alerting and long-term operational history.
+
+<div align="right"><a href="#-cloudcart--production-style-devops-platform">⬆ Back to top</a></div>
 
 ---
 
-## Executive Summary
+## 📋 Executive Summary
 
 CloudCart simulates a growing e-commerce company that needs to ship changes safely and repeatably. Rather than building the full storefront first, this project builds the **delivery platform** first: the infrastructure, automation, security gates and orchestration that any real application would run on top of.
 
@@ -57,44 +63,46 @@ Ten phases are complete and verified. Phase 11, expanding automated security con
 
 ---
 
-## Business Problem
+## ❓ Business Problem
 
 A growing company needs more than a working web page — it needs confidence in the system around the application:
 
-- Can infrastructure be recreated consistently, without manual clicking?
-- Can a server be configured the same way every time?
-- Is every release built, tested and scanned before it reaches a server?
-- Can a bad image be blocked automatically?
-- Can a failed pod or container be detected and replaced without a human paging in?
-- Can engineers see what's running, and why something failed, quickly?
-- Can AWS spend and credentials be controlled?
+- 🔁 Can infrastructure be recreated consistently, without manual clicking?
+- ⚙️ Can a server be configured the same way every time?
+- 🧪 Is every release built, tested and scanned before it reaches a server?
+- 🛑 Can a bad image be blocked automatically?
+- 🩹 Can a failed pod or container be detected and replaced without a human paging in?
+- 👀 Can engineers see what's running, and why something failed, quickly?
+- 💰 Can AWS spend and credentials be controlled?
 
 CloudCart demonstrates answers to each of these questions with working code, not slides.
 
 ---
 
-## Why This Project Matters
+## 💡 Why This Project Matters
 
 Most portfolio projects show *an app*. CloudCart shows *the machinery that ships an app safely* — the part hiring managers actually want to see evidence of in a DevOps or platform engineering candidate. Every phase produces a verifiable artifact: a Terraform plan, a Jenkins pipeline log, a Trivy scan result, a `kubectl get pods` output showing self-healing. The project is deliberately staged so incomplete work is never disguised as finished work.
 
 ---
 
-## What I Built
+## 🧱 What I Built
 
-- **Infrastructure as Code:** reusable Terraform modules for a multi-AZ VPC, EC2 compute, and ECR.
-- **Configuration automation:** Ansible roles that install Docker, AWS CLI and deploy the application idempotently.
-- **Secure container registry:** immutable, scanned, encrypted image storage in Amazon ECR.
-- **CI/CD pipeline:** a Jenkins pipeline-as-code that validates, builds, tests, scans, publishes and deploys — with a hard security gate.
-- **Kubernetes platform:** a three-node local Kind cluster running three Git-reconciled replicas with health probes, resource limits, topology spreading, a Service, and a Pod Disruption Budget.
-- **Helm release engineering:** a reusable application chart with validated rendering, installation, upgrades, release history and rollback.
-- **GitOps delivery:** Argo CD renders the Helm chart from Git, synchronizes changes, prunes removed resources and repairs live drift.
-- **Observability:** Prometheus and Grafana collect cluster metrics; Blackbox Exporter probes CloudCart and a PrometheusRule raises a critical availability alert.
-- **Verified recovery:** Kubernetes pod replacement, Argo CD drift repair, Git-driven scaling and monitoring alert recovery were demonstrated.
-- **Documentation discipline:** troubleshooting notes, evidence, and an explicit roadmap separating what's done from what's planned.
+- 🌍 **Infrastructure as Code:** reusable Terraform modules for a multi-AZ VPC, EC2 compute, and ECR.
+- ⚙️ **Configuration automation:** Ansible roles that install Docker, AWS CLI and deploy the application idempotently.
+- 🔒 **Secure container registry:** immutable, scanned, encrypted image storage in Amazon ECR.
+- 🔄 **CI/CD pipeline:** a Jenkins pipeline-as-code that validates, builds, tests, scans, publishes and deploys — with a hard security gate.
+- ☸️ **Kubernetes platform:** a three-node local Kind cluster running three Git-reconciled replicas with health probes, resource limits, topology spreading, a Service, and a Pod Disruption Budget.
+- 📦 **Helm release engineering:** a reusable application chart with validated rendering, installation, upgrades, release history and rollback.
+- 🔁 **GitOps delivery:** Argo CD renders the Helm chart from Git, synchronizes changes, prunes removed resources and repairs live drift.
+- 📊 **Observability:** Prometheus and Grafana collect cluster metrics; Blackbox Exporter probes CloudCart and a PrometheusRule raises a critical availability alert.
+- ✅ **Verified recovery:** Kubernetes pod replacement, Argo CD drift repair, Git-driven scaling and monitoring alert recovery were demonstrated.
+- 📝 **Documentation discipline:** troubleshooting notes, evidence, and an explicit roadmap separating what's done from what's planned.
+
+<div align="right"><a href="#-cloudcart--production-style-devops-platform">⬆ Back to top</a></div>
 
 ---
 
-## Key Engineering Achievements
+## 🏆 Key Engineering Achievements
 
 | Achievement | Why it matters |
 |---|---|
@@ -116,7 +124,7 @@ Most portfolio projects show *an app*. CloudCart shows *the machinery that ships
 
 ---
 
-## Architecture Overview
+## 🏗️ Architecture Overview
 
 ### 1 · Project Evolution — *Implemented phases 1–10, remainder planned*
 
@@ -139,7 +147,7 @@ flowchart LR
     classDef planned fill:#E5E7EB,stroke:#9CA3AF,color:#111827
 ```
 
-Green = completed and verified. Blue = next (Phase 11). Grey = planned.
+🟢 Green = completed and verified &nbsp;·&nbsp; 🔵 Blue = next (Phase 11) &nbsp;·&nbsp; ⚪ Grey = planned.
 
 ### 2 · Current Implemented Platform — *Implemented*
 
@@ -223,7 +231,8 @@ sequenceDiagram
     CI-->>Dev: Pipeline successful
 ```
 
-### 5 · Current Kubernetes Architecture — *Implemented, lab-scale*
+<a id="kubernetes-architecture"></a>
+### 5 · ☸️ Current Kubernetes Architecture — *Implemented, lab-scale*
 
 ```mermaid
 flowchart TB
@@ -290,7 +299,7 @@ flowchart TB
 | Data | None yet | RDS PostgreSQL, Redis, SQS, S3 |
 | Observability | Manual `kubectl`/logs | Prometheus, Grafana, CloudWatch |
 
-> The right-hand column is a design target only. Nothing in that column is currently deployed.
+> ⚠️ The right-hand column is a design target only. Nothing in that column is currently deployed.
 
 ### 9 · Future GitOps Workflow — *Planned*
 
@@ -334,29 +343,31 @@ flowchart TB
     EKS --> CWL["CloudWatch Logs"]
 ```
 
+<div align="right"><a href="#-cloudcart--production-style-devops-platform">⬆ Back to top</a></div>
+
 ---
 
-## Technology Decisions
+## 🧰 Technology Decisions
 
 | Area | Technology | Why chosen |
 |---|---|---|
-| Cloud | AWS (`ap-south-1`) | Widely used provider; realistic IAM, networking and cost model |
-| Infrastructure | Terraform | Reviewable, versioned, reusable infrastructure modules |
-| Configuration | Ansible | Idempotent server configuration without bespoke shell scripts |
-| Containers | Docker | Consistent runtime across laptop, CI and servers |
-| Registry | Amazon ECR | Private, encrypted, immutable, scanned image storage |
-| CI/CD | Jenkins | Pipeline-as-code with fine-grained credential handling |
-| Security scanning | Trivy | Free, fast, blocks critical CVEs before deployment |
-| Orchestration | Kubernetes | Declarative desired state, self-healing, service discovery |
-| Local cluster | Kind | Free, reproducible multi-node cluster without cloud spend |
-| Packaging (next) | Helm | Parameterized, versioned releases with rollback |
-| GitOps (planned) | Argo CD | Git as the single source of truth for desired state |
-| Metrics (planned) | Prometheus | Standard Kubernetes-native metrics collection |
-| Dashboards (planned) | Grafana | Visualization and alerting on top of Prometheus |
+| ☁️ Cloud | AWS (`ap-south-1`) | Widely used provider; realistic IAM, networking and cost model |
+| 🌍 Infrastructure | Terraform | Reviewable, versioned, reusable infrastructure modules |
+| ⚙️ Configuration | Ansible | Idempotent server configuration without bespoke shell scripts |
+| 📦 Containers | Docker | Consistent runtime across laptop, CI and servers |
+| 🔒 Registry | Amazon ECR | Private, encrypted, immutable, scanned image storage |
+| 🔄 CI/CD | Jenkins | Pipeline-as-code with fine-grained credential handling |
+| 🛡️ Security scanning | Trivy | Free, fast, blocks critical CVEs before deployment |
+| ☸️ Orchestration | Kubernetes | Declarative desired state, self-healing, service discovery |
+| 🧪 Local cluster | Kind | Free, reproducible multi-node cluster without cloud spend |
+| 📦 Packaging (next) | Helm | Parameterized, versioned releases with rollback |
+| 🔁 GitOps (planned) | Argo CD | Git as the single source of truth for desired state |
+| 📈 Metrics (planned) | Prometheus | Standard Kubernetes-native metrics collection |
+| 📊 Dashboards (planned) | Grafana | Visualization and alerting on top of Prometheus |
 
 ---
 
-## Completed vs. Planned Matrix
+## ✅ Completed vs. Planned Matrix
 
 | Phase | Area | Demonstrated outcome | Status |
 |---:|---|---|:---:|
@@ -368,19 +379,22 @@ flowchart TB
 | 6 | Jenkins | Automated, security-gated delivery | ✅ |
 | 7 | Kubernetes | Two replicas, verified self-healing | ✅ |
 | 8 | Helm | Reusable releases, upgrade history and rollback | ✅ |
-| 9 | GitOps | Argo CD reconciliation | ▶️ Next |
-| 10 | Observability | Prometheus, Grafana, alerting | 🗓️ Planned |
-| 11 | Security automation | Gitleaks, Checkov, policy scanning | 🗓️ Planned |
+| 9 | GitOps | Argo CD auto-sync, pruning and drift repair | ✅ |
+| 10 | Observability | Prometheus, Grafana, endpoint probing and alert recovery | ✅ |
+| 11 | Security automation | Gitleaks, Checkov and policy scanning | ▶️ Next |
 | 12 | Reliability | HPA, load and recovery testing | 🗓️ Planned |
 | 13 | EKS | Temporary AWS reference deployment | 🗓️ Planned |
-| 14 | Application | Frontend, API, database | 🗓️ Planned |
+| 14 | Application | Frontend, API and database | 🗓️ Planned |
 | 15 | Portfolio | Final runbooks and demonstration | 🗓️ Planned |
 
-```mermaid
+```
+mermaid
 flowchart LR
-    P1["1 Docker"]:::done --> P2["2 VPC"]:::done --> P3["3 EC2"]:::done --> P4["4 Ansible"]:::done --> P5["5 ECR"]:::done
-    P5 --> P6["6 Jenkins"]:::done --> P7["7 Kubernetes"]:::done --> P8["8 Helm"]:::done --> P9["9 GitOps"]:::next --> P10["10 Observability"]:::planned
-    P10 --> P11["11 Security"]:::planned --> P12["12 Reliability"]:::planned --> P13["13 EKS"]:::planned --> P14["14 App"]:::planned --> P15["15 Portfolio"]:::planned
+    P1["1 Docker"]:::done --> P2["2 VPC"]:::done --> P3["3 EC2"]:::done --> P4["4 Ansible"]:::done
+    P4 --> P5["5 ECR"]:::done --> P6["6 Jenkins"]:::done --> P7["7 Kubernetes"]:::done
+    P7 --> P8["8 Helm"]:::done --> P9["9 GitOps"]:::done --> P10["10 Observability"]:::done
+    P10 --> P11["11 Security"]:::next --> P12["12 Reliability"]:::planned
+    P12 --> P13["13 EKS"]:::planned --> P14["14 App"]:::planned --> P15["15 Portfolio"]:::planned
 
     classDef done fill:#22C55E,stroke:#15803D,color:#052e16
     classDef next fill:#0F1689,stroke:#0F1689,color:#ffffff
@@ -389,7 +403,7 @@ flowchart LR
 
 ---
 
-## Repository Structure
+## 📂 Repository Structure
 
 ```text
 cloudcart-production-devops-platform/
@@ -429,7 +443,7 @@ cloudcart-production-devops-platform/
 
 ---
 
-## Prerequisites
+## 🧾 Prerequisites
 
 - Git, Docker Desktop with Compose
 - `kubectl`, Kind
@@ -443,7 +457,7 @@ cd cloudcart-production-devops-platform
 
 ---
 
-## Docker Quick Start
+## 🚀 Docker Quick Start
 
 ```bash
 docker compose up -d --build
@@ -455,10 +469,10 @@ Open `http://localhost:8081`. Stop with `docker compose down`.
 
 ---
 
-## Kubernetes Quick Start
+## ☸️ Kubernetes Quick Start
 
 <details>
-<summary>Full Kind cluster walkthrough</summary>
+<summary><strong>Full Kind cluster walkthrough</strong></summary>
 
 ```bash
 kind create cluster \
@@ -490,7 +504,7 @@ kind delete cluster --name cloudcart
 
 </details>
 
-### Self-Healing Demonstration
+### 🩹 Self-Healing Demonstration
 
 ```bash
 POD_TO_DELETE=$(kubectl get pods -n cloudcart -o jsonpath='{.items[0].metadata.name}')
@@ -502,7 +516,7 @@ The Deployment recreates the pod automatically and returns to `2/2` available re
 
 ---
 
-## AWS Deployment Explanation
+## ☁️ AWS Deployment Explanation
 
 AWS resources are created via Terraform modules (`vpc`, `ec2`, `ecr`) and configured via Ansible. Never hard-code live identifiers — use Terraform outputs:
 
@@ -515,19 +529,19 @@ The Jenkins pipeline then builds an AMD64 image, tests it locally, scans it with
 
 ---
 
-## Security Controls
+## 🔐 Security Controls
 
-- No AWS credentials, SSH private keys, or Terraform state committed to Git
-- EC2 uses an IAM instance role instead of static AWS keys
-- SSH ingress restricted to an administrator `/32` CIDR
-- EBS volumes encrypted; ECR uses AES-256 encryption
-- ECR tags immutable; images scanned on push
-- Trivy blocks critical vulnerabilities in CI before deployment
-- Jenkins credentials stored in Jenkins, not in pipeline code
-- Kubernetes routes traffic only to pods passing readiness probes
-- Containers run with a restricted security context and minimal added capabilities
+- 🚫 No AWS credentials, SSH private keys, or Terraform state committed to Git
+- 🪪 EC2 uses an IAM instance role instead of static AWS keys
+- 🔒 SSH ingress restricted to an administrator `/32` CIDR
+- 🔐 EBS volumes encrypted; ECR uses AES-256 encryption
+- 🏷️ ECR tags immutable; images scanned on push
+- 🛡️ Trivy blocks critical vulnerabilities in CI before deployment
+- 🗝️ Jenkins credentials stored in Jenkins, not in pipeline code
+- ☸️ Kubernetes routes traffic only to pods passing readiness probes
+- 🧱 Containers run with a restricted security context and minimal added capabilities
 
-Never commit:
+**Never commit:**
 
 ```text
 *.pem
@@ -541,7 +555,7 @@ Jenkins secrets
 Private inventory containing sensitive values
 ```
 
-Pre-push check:
+**Pre-push check:**
 
 ```bash
 git status --short
@@ -549,27 +563,29 @@ git diff --cached
 find . -type f -name "*.pem"
 ```
 
+<div align="right"><a href="#-cloudcart--production-style-devops-platform">⬆ Back to top</a></div>
+
 ---
 
-## Cost-Control Decisions
+## 💰 Cost-Control Decisions
 
 This project is **Free Tier–conscious**, not guaranteed free — AWS pricing depends on account age, region and usage.
 
-- No NAT Gateway in the lab
-- Small EC2 instance type and small encrypted GP3 volume
-- Local Jenkins instead of a continuously running Jenkins EC2 host
-- Local Kind instead of a continuously running EKS cluster
-- ECR lifecycle policy to limit stored image versions
-- Project and cost-centre tags on all resources
-- EC2 stopped when not actively in use
-- Temporary resources (e.g., a future EKS reference) destroyed immediately after evidence is captured
-- `terraform plan` reviewed before every `apply`
+- 🚫 No NAT Gateway in the lab
+- 🐜 Small EC2 instance type and small encrypted GP3 volume
+- 🖥️ Local Jenkins instead of a continuously running Jenkins EC2 host
+- 🧪 Local Kind instead of a continuously running EKS cluster
+- 🧹 ECR lifecycle policy to limit stored image versions
+- 🏷️ Project and cost-centre tags on all resources
+- ⏸️ EC2 stopped when not actively in use
+- ♻️ Temporary resources (e.g., a future EKS reference) destroyed immediately after evidence is captured
+- 🔎 `terraform plan` reviewed before every `apply`
 
-> Public IPv4 addresses, EKS, NAT Gateway, load balancers, RDS, WAF and other managed services can generate charges. Always check AWS Billing and Cost Explorer before and after any hands-on session.
+> ⚠️ Public IPv4 addresses, EKS, NAT Gateway, load balancers, RDS, WAF and other managed services can generate charges. Always check AWS Billing and Cost Explorer before and after any hands-on session.
 
 ---
 
-## Problems Solved and Lessons Learned
+## 🧩 Problems Solved and Lessons Learned
 
 | Failure | Root cause | Resolution | Lesson |
 |---|---|---|---|
@@ -593,11 +609,11 @@ This project is **Free Tier–conscious**, not guaranteed free — AWS pricing d
 | Service target port unresolved | Named port mismatch between container and Service | Aligned port names between Deployment and Service | Named ports must match exactly across manifests |
 | EndpointSlice showed an unset port | Direct consequence of the above target-port mismatch | Fixed after correcting the Service definition | EndpointSlice output is a fast diagnostic for Service misconfiguration |
 
-Full commands and detail live in [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md).
+📄 Full commands and detail live in [`TROUBLESHOOTING.md`](TROUBLESHOOTING.md).
 
 ---
 
-## Project Evidence
+## 📸 Project Evidence
 
 Screenshots are organized by phase and reference the actual files in the repository's `screenshots/` directory.
 
@@ -702,11 +718,13 @@ Screenshots are organized by phase and reference the actual files in the reposit
 | Self-healing completed — back to `2/2` | `screenshots/phase-7/12-self-healing-completed.png` |
 | Health check after self-healing | `screenshots/phase-7/13-health-after-self-healing.png` |
 
-> No account credentials, access keys, SSH private keys, Jenkins secrets or Terraform state appear in any screenshot.
+> 🔒 No account credentials, access keys, SSH private keys, Jenkins secrets or Terraform state appear in any screenshot.
+
+<div align="right"><a href="#-cloudcart--production-style-devops-platform">⬆ Back to top</a></div>
 
 ---
 
-## Implementation Roadmap
+## 🗺️ Implementation Roadmap
 
 | Phase | Milestone | Status |
 |---:|---|:---:|
@@ -728,7 +746,7 @@ Screenshots are organized by phase and reference the actual files in the reposit
 
 ---
 
-## Phase 8 — Helm Packaging ✅
+## 📦 Phase 8 — Helm Packaging ✅
 
 Phase 8 converted the raw Kubernetes resources into a reusable, parameterized Helm chart and safely migrated the existing live resources from kubectl/Kustomize ownership to Helm.
 
@@ -747,7 +765,7 @@ Phase 8 converted the raw Kubernetes resources into a reusable, parameterized He
 - Rolled back to revision 1 configuration, creating deployed revision 3
 - Restored two replicas and confirmed HTTP 200 after rollback
 
-> **Current resource manager:** Helm owns the live CloudCart Deployment, Service and Pod Disruption Budget. Do not run `kubectl apply -k kubernetes/base` during normal operation because doing so would introduce competing field managers. The raw manifests remain as the Phase 7 foundation and recovery reference.
+> 🧭 **Current resource manager:** Helm owns the live CloudCart Deployment, Service and Pod Disruption Budget. Do not run `kubectl apply -k kubernetes/base` during normal operation because doing so would introduce competing field managers. The raw manifests remain as the Phase 7 foundation and recovery reference.
 
 ### Phase 8 delivery flow
 
@@ -784,7 +802,7 @@ All 21 screenshots are stored in [`screenshots/phase-8/`](screenshots/phase-8/),
 
 ---
 
-## Phase 9 — Argo CD GitOps ✅
+## 🔁 Phase 9 — Argo CD GitOps ✅
 
 Phase 9 moved Kubernetes delivery from manual Helm commands to continuous Git reconciliation. Argo CD v3.4.5 runs in the Kind cluster and treats this repository's Helm chart and `values-gitops.yaml` as the desired state.
 
@@ -820,7 +838,7 @@ All evidence is stored in [`screenshots/phase-9/`](screenshots/phase-9/).
 
 ---
 
-## Phase 10 — Prometheus, Grafana and Availability Alerting ✅
+## 📊 Phase 10 — Prometheus, Grafana and Availability Alerting ✅
 
 Phase 10 added local observability without creating AWS cost. The pinned kube-prometheus-stack provides Prometheus, Grafana, Alertmanager, kube-state-metrics, node-exporter and the Prometheus Operator. Blackbox Exporter tests the real CloudCart health endpoint.
 
@@ -857,11 +875,13 @@ flowchart LR
 |---|
 | ![Monitoring recovery](screenshots/phase-10/13-cloudcart-monitoring-recovered.png) |
 
-> The saved Phase 10 evidence contains screenshots 01–08, 12 and 13. Missing sequence numbers are not linked because those images were not saved; the alert-firing and recovery evidence is present.
+> 📎 The saved Phase 10 evidence contains screenshots 01–08, 12 and 13. Missing sequence numbers are not linked because those images were not saved; the alert-firing and recovery evidence is present.
+
+<div align="right"><a href="#-cloudcart--production-style-devops-platform">⬆ Back to top</a></div>
 
 ---
 
-## Phase 11 — Security Automation (Next)
+## 🛡️ Phase 11 — Security Automation (Next)
 
 - Add Kubernetes, Helm and infrastructure misconfiguration checks to CI
 - Add secret detection and dependency checks
@@ -870,7 +890,7 @@ flowchart LR
 
 ---
 
-## Known Limitations
+## ⚠️ Known Limitations
 
 - The application is a placeholder — not yet the full CloudCart e-commerce experience
 - Kubernetes, GitOps and monitoring run on local Kind, not a continuously running managed cluster
@@ -884,7 +904,7 @@ flowchart LR
 
 ---
 
-## Skills Demonstrated
+## 🎯 Skills Demonstrated
 
 - Infrastructure as Code with modular, reusable Terraform
 - Configuration management and idempotent automation with Ansible
@@ -897,7 +917,7 @@ flowchart LR
 
 ---
 
-## Interview Explanation
+## 🎤 Interview Explanation
 
 > CloudCart is a production-style DevOps platform I built from the ground up. I containerized an Nginx workload, provisioned a multi-tier AWS network, EC2 and ECR with Terraform, automated host configuration with Ansible, and created a Jenkins pipeline that validates, tests, scans, publishes and deploys immutable images. I built a three-node Kind platform, packaged the workload with Helm, demonstrated upgrade and rollback, and moved deployment reconciliation to Argo CD with automated sync, pruning and drift repair. Finally, I added Prometheus, Grafana, Alertmanager and Blackbox Exporter, triggered a real availability alert and verified recovery. The current workload is intentionally a placeholder and the Kubernetes environment is local rather than production EKS.
 
@@ -905,7 +925,7 @@ flowchart LR
 
 <div align="center">
 
-## Author
+## 👤 Author
 
 ### Anshu Sharma
 **Aspiring Cloud and DevOps Engineer**
@@ -917,5 +937,7 @@ Building practical systems with AWS, Terraform, Ansible, Jenkins, Docker, Kubern
 ---
 
 **Phases 1–10 completed · Phase 11, Security Automation, is next**
+
+<a href="#-cloudcart--production-style-devops-platform">⬆ Back to top</a>
 
 </div>
